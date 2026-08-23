@@ -25,6 +25,9 @@ import photosRouter from "./routes/photos.js";
 import matchRouter from "./routes/match.js";
 import interestRouter from "./routes/interest.js";
 import chatRouter from "./routes/chat.js";
+import reportRouter from "./routes/report.js";
+import adminRouter from "./routes/admin.js";
+import userRouter from "./routes/user.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -59,6 +62,9 @@ app.use("/api/profile", profileRouter);
 app.use("/api/match", matchRouter);
 app.use("/api/interest", interestRouter);
 app.use("/api/chat", chatRouter);
+app.use("/api/report", reportRouter);
+app.use("/api/admin", adminRouter);
+app.use("/api/user", userRouter);
 
 // Secure Private Document Handler & Public Photo Handler
 app.use("/api/documents", documentsRouter);
@@ -117,4 +123,6 @@ app.listen(PORT, () => {
   console.log(`[Profile] Lifestyle profile & landlord listing endpoints mounted at /api/profile/*`);
   console.log(`[Documents] Protected document endpoints mounted at /api/documents/*`);
   console.log(`[Photos] Public photo endpoints mounted at /api/photos/*`);
+  console.log(`[Report] User report endpoints mounted at /api/report/*`);
+  console.log(`[Admin] Admin dashboard & promotion endpoints mounted at /api/admin/*`);
 });

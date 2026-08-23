@@ -36,15 +36,25 @@ export function Login({ onLoginSuccess, onToggleForgotPassword }) {
     setGoogleLoading(true);
     setError(null);
     try {
-      await authClient.signIn.social({
+      const { data, error: apiError } = await authClient.signIn.social({
         provider: "google",
         callbackURL: "http://localhost:5173",
       });
+
+      if (apiError) {
+        throw new Error(apiError.message || "Google authentication initialization failed.");
+      }
+
+      if (data?.url) {
+        window.location.href = data.url;
+      }
     } catch (err) {
-      setError("Google Sign-In initialization failed: " + err.message);
+      console.error("[Google OAuth Error]:", err);
+      setError("Google Sign-In failed: " + err.message);
       setGoogleLoading(false);
     }
   };
+
 
   return (
     <div className="auth-card">

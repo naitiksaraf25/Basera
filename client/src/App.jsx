@@ -10,6 +10,8 @@ import { LandlordListingForm } from "./components/LandlordListingForm";
 import { MatchRequirementForm } from "./components/MatchRequirementForm";
 import { MatchResultsView } from "./components/MatchResultsView";
 import { ChatView } from "./components/ChatView";
+import { AdminDashboard } from "./components/AdminDashboard";
+import { WarningModal } from "./components/WarningModal";
 import { ProtectedTest } from "./components/ProtectedTest";
 import "./index.css";
 
@@ -37,6 +39,9 @@ export function App() {
 
   const user = sessionData?.user;
   const isVerified = user?.platformVerification?.status === "verified";
+  const unacknowledgedWarning = Array.isArray(user?.warnings)
+    ? user.warnings.find((w) => w.acknowledged === false)
+    : null;
 
   // Fetch latest match request if switching to matching view
   useEffect(() => {
@@ -157,6 +162,15 @@ export function App() {
                 >
                   Verification Status
                 </button>
+                {user.role === "admin" && (
+                  <button
+                    className={activeView === "admin" ? "active" : ""}
+                    onClick={() => setActiveView("admin")}
+                    style={{ background: "#4338ca", color: "#fff", fontWeight: "bold" }}
+                  >
+                    🛡️ Admin Dashboard
+                  </button>
+                )}
               </div>
 
               {activeView === "onboarding" && (
@@ -256,12 +270,23 @@ export function App() {
                   )}
                 </div>
               )}
+
+              {activeView === "admin" && user.role === "admin" && (
+                <AdminDashboard user={user} />
+              )}
             </div>
           )}
 
           <div style={{ margin: "1.5rem 0", display: "flex", gap: "1rem", justifyContent: "center" }}>
             <button onClick={() => refetch()}>Refresh Session</button>
           </div>
+
+          {unacknowledgedWarning && (
+            <WarningModal
+              warning={unacknowledgedWarning}
+              onAcknowledged={() => refetch()}
+            />
+          )}
 
           <ProtectedTest />
         </div>

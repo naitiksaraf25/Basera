@@ -36,6 +36,8 @@ try {
 const db = client.db();
 
 export const auth = betterAuth({
+  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:5000",
+  secret: process.env.BETTER_AUTH_SECRET,
   database: mongodbAdapter(db, {
     transaction: false, // Disabled for standalone MongoDB compatibility
   }),
@@ -75,6 +77,10 @@ export const auth = betterAuth({
         defaultValue: "active",
       },
       platformVerification: {
+        type: "object",
+        required: false,
+      },
+      warnings: {
         type: "object",
         required: false,
       },

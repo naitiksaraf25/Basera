@@ -57,3 +57,21 @@ export const requireVerified = async (req, res, next) => {
   });
 };
 
+/**
+ * Express middleware to protect administrative routes.
+ * Requires an active session and req.user.role === 'admin'.
+ * Rejects non-admin users with HTTP 403 Forbidden.
+ */
+export const requireAdmin = async (req, res, next) => {
+  await requireAuth(req, res, () => {
+    if (req.user?.role !== "admin") {
+      return res.status(403).json({
+        error: "Forbidden",
+        message: "Admin access required.",
+      });
+    }
+    next();
+  });
+};
+
+

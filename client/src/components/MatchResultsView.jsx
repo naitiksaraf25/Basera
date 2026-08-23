@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
+import { ReportModal } from "./ReportModal";
 
 export function MatchResultsView({ matchRequest, isCached, onRecompute, onBackToForm, onOpenChat }) {
   const [expandedBreakdown, setExpandedBreakdown] = useState({});
   const [interestStates, setInterestStates] = useState({}); // { candidateId: { status: 'none'|'pending'|'matched', isMutualMatch: bool } }
   const [loadingInterest, setLoadingInterest] = useState({});
   const [toastMessage, setToastMessage] = useState(null);
+  const [reportingCandidate, setReportingCandidate] = useState(null); // { id, name }
 
   const results = matchRequest?.results || [];
   const eligibleCount = matchRequest?.totalEligibleCount ?? results.length;
@@ -427,8 +429,22 @@ export function MatchResultsView({ matchRequest, isCached, onRecompute, onBackTo
                       {loadingInterest[res.candidateId] ? "Sending..." : "💖 Express Interest"}
                     </button>
                   )}
+                  {/* REPORT USER BUTTON */}
+                  <button
+                    onClick={() =>
+                      setReportingCandidate({
+                        id: res.candidateId || snapshot.userId || snapshot.landlordId || snapshot.id,
+                        name: snapshot.title || snapshot.name || snapshot.landlordName || "Candidate",
+                      })
+                    }
+                    style={{ background: "#475569", fontSize: "0.8rem", padding: "0.45rem 0.7rem" }}
+                    title="Report inappropriate content or user"
+                  >
+                    🚨 Report
+                  </button>
                 </div>
               </div>
+
 
               {/* Toggle Breakdown Button */}
               <button
@@ -483,6 +499,18 @@ export function MatchResultsView({ matchRequest, isCached, onRecompute, onBackTo
           );
         })}
       </div>
+
+      {/* Report User Modal */}
+      {reportingCandidate && (
+        <ReportModal
+          reportedUserId={reportingCandidate.id || reportingCandidate.userId || reportingCandidate.candidateId}
+          reportedUserName={reportingCandidate.name}
+          onClose={() => setReportingCandidate(null)}
+          onReportSubmitted={() => {
+            setToastMessage("Report submitted successfully to platform moderators.");
+          }}
+        />
+      )}
     </div>
   );
 }

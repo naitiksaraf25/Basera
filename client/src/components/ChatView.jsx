@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { ReportModal } from "./ReportModal";
 
 export function ChatView({ user, initialChatId = null, onBackToMatching }) {
   const [chatList, setChatList] = useState([]);
@@ -10,6 +11,7 @@ export function ChatView({ user, initialChatId = null, onBackToMatching }) {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sendingMessage, setSendingMessage] = useState(false);
   const [errorAlert, setErrorAlert] = useState(null);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   const messagesEndRef = useRef(null);
 
@@ -356,8 +358,16 @@ export function ChatView({ user, initialChatId = null, onBackToMatching }) {
                   </div>
                 </div>
 
-                <div style={{ fontSize: "0.75rem", color: "#22c55e", fontWeight: "600" }}>
-                  ● Matched & Active
+                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                  <span style={{ fontSize: "0.75rem", color: "#22c55e", fontWeight: "600" }}>
+                    ● Matched & Active
+                  </span>
+                  <button
+                    onClick={() => setShowReportModal(true)}
+                    style={{ background: "#ef444420", border: "1px solid #ef4444", color: "#ef4444", fontSize: "0.75rem", padding: "0.3rem 0.6rem" }}
+                  >
+                    🚨 Report User
+                  </button>
                 </div>
               </div>
 
@@ -520,6 +530,18 @@ export function ChatView({ user, initialChatId = null, onBackToMatching }) {
           )}
         </div>
       </div>
+
+      {/* Report Modal inside Chat */}
+      {showReportModal && otherParticipant && (
+        <ReportModal
+          reportedUserId={otherParticipant.userId || otherParticipant.candidateId || otherParticipant.id || otherParticipant._id}
+          reportedUserName={otherParticipant.name}
+          onClose={() => setShowReportModal(false)}
+          onReportSubmitted={() => {
+            setErrorAlert("Report submitted successfully to platform moderators.");
+          }}
+        />
+      )}
     </div>
   );
 }

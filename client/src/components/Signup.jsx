@@ -9,6 +9,31 @@ export function Signup({ onSignupSuccess }) {
   const [error, setError] = useState(null);
   const [submitted, setSubmitted] = useState(false);
 
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  const handleGoogleLogin = async () => {
+    setGoogleLoading(true);
+    setError(null);
+    try {
+      const { data, error: apiError } = await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "http://localhost:5173",
+      });
+
+      if (apiError) {
+        throw new Error(apiError.message || "Google authentication initialization failed.");
+      }
+
+      if (data?.url) {
+        window.location.href = data.url;
+      }
+    } catch (err) {
+      console.error("[Google OAuth Error]:", err);
+      setError("Google Sign-In failed: " + err.message);
+      setGoogleLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -89,6 +114,18 @@ export function Signup({ onSignupSuccess }) {
           {loading ? "Creating Account..." : "Sign Up with Email"}
         </button>
       </form>
+
+      <div className="divider">OR</div>
+
+      <button
+        type="button"
+        className="btn-google"
+        onClick={handleGoogleLogin}
+        disabled={googleLoading}
+      >
+        {googleLoading ? "Connecting to Google..." : "Continue with Google"}
+      </button>
     </div>
   );
 }
+
