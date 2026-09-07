@@ -1,6 +1,11 @@
 import { useState } from "react";
 
-export function ReportModal({ reportedUserId, reportedUserName, onClose, onReportSubmitted }) {
+export function ReportModal({
+  reportedUserId,
+  reportedUserName,
+  onClose,
+  onReportSubmitted,
+}) {
   const [reason, setReason] = useState("Harassment");
   const [details, setDetails] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -32,7 +37,9 @@ export function ReportModal({ reportedUserId, reportedUserName, onClose, onRepor
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || data.error || "Failed to submit report.");
+        throw new Error(
+          data.message || data.error || "Failed to submit report.",
+        );
       }
 
       setSuccessMsg(data.message || "Report submitted successfully.");
@@ -76,7 +83,14 @@ export function ReportModal({ reportedUserId, reportedUserName, onClose, onRepor
           boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.5)",
         }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "1rem",
+          }}
+        >
           <h3 style={{ margin: 0, color: "#f8fafc", fontSize: "1.15rem" }}>
             🚨 Report User
           </h3>
@@ -95,12 +109,22 @@ export function ReportModal({ reportedUserId, reportedUserName, onClose, onRepor
           </button>
         </div>
 
-        <p style={{ fontSize: "0.85rem", color: "#cbd5e1", marginBottom: "1rem" }}>
-          Reporting <strong>{reportedUserName || reportedUserId}</strong> to platform moderators. Please specify the reason below.
+        <p
+          style={{
+            fontSize: "0.85rem",
+            color: "#cbd5e1",
+            marginBottom: "1rem",
+          }}
+        >
+          Reporting <strong>{reportedUserName || reportedUserId}</strong> to
+          platform moderators. Please specify the reason below.
         </p>
 
         {error && (
-          <div className="error-alert" style={{ marginBottom: "1rem", fontSize: "0.85rem" }}>
+          <div
+            className="error-alert"
+            style={{ marginBottom: "1rem", fontSize: "0.85rem" }}
+          >
             {error}
           </div>
         )}
@@ -122,9 +146,19 @@ export function ReportModal({ reportedUserId, reportedUserName, onClose, onRepor
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        <form
+          onSubmit={handleSubmit}
+          style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+        >
           <div>
-            <label style={{ display: "block", fontSize: "0.85rem", color: "#94a3b8", marginBottom: "0.4rem" }}>
+            <label
+              style={{
+                display: "block",
+                fontSize: "0.85rem",
+                color: "#94a3b8",
+                marginBottom: "0.4rem",
+              }}
+            >
               Reason for Report *
             </label>
             <select
@@ -143,7 +177,9 @@ export function ReportModal({ reportedUserId, reportedUserName, onClose, onRepor
             >
               <option value="Harassment">Harassment</option>
               <option value="Spam">Spam</option>
-              <option value="Inappropriate Content">Inappropriate Content</option>
+              <option value="Inappropriate Content">
+                Inappropriate Content
+              </option>
               <option value="Fake Listing">Fake Listing</option>
               <option value="Safety Concern">Safety Concern</option>
               <option value="Other">Other</option>
@@ -151,7 +187,14 @@ export function ReportModal({ reportedUserId, reportedUserName, onClose, onRepor
           </div>
 
           <div>
-            <label style={{ display: "block", fontSize: "0.85rem", color: "#94a3b8", marginBottom: "0.4rem" }}>
+            <label
+              style={{
+                display: "block",
+                fontSize: "0.85rem",
+                color: "#94a3b8",
+                marginBottom: "0.4rem",
+              }}
+            >
               Additional Details (Optional)
             </label>
             <textarea
@@ -173,19 +216,35 @@ export function ReportModal({ reportedUserId, reportedUserName, onClose, onRepor
             />
           </div>
 
-          <div style={{ display: "flex", gap: "0.75rem", justifyContent: "flex-end", marginTop: "0.5rem" }}>
+          <div
+            style={{
+              display: "flex",
+              gap: "0.75rem",
+              justifyContent: "flex-end",
+              marginTop: "0.5rem",
+            }}
+          >
             <button
               type="button"
               onClick={onClose}
               disabled={submitting}
-              style={{ background: "#475569", padding: "0.55rem 1rem", fontSize: "0.85rem" }}
+              style={{
+                background: "#475569",
+                padding: "0.55rem 1rem",
+                fontSize: "0.85rem",
+              }}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              style={{ background: "#ef4444", fontWeight: "bold", padding: "0.55rem 1rem", fontSize: "0.85rem" }}
+              style={{
+                background: "#ef4444",
+                fontWeight: "bold",
+                padding: "0.55rem 1rem",
+                fontSize: "0.85rem",
+              }}
             >
               {submitting ? "Submitting..." : "Submit Report"}
             </button>

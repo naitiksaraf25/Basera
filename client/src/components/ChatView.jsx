@@ -124,7 +124,9 @@ export function ChatView({ user, initialChatId = null, onBackToMatching }) {
     }
 
     if (trimmed.length > 2000) {
-      setErrorAlert(`Message exceeds max limit of 2000 characters (${trimmed.length} chars).`);
+      setErrorAlert(
+        `Message exceeds max limit of 2000 characters (${trimmed.length} chars).`,
+      );
       return;
     }
 
@@ -179,24 +181,42 @@ export function ChatView({ user, initialChatId = null, onBackToMatching }) {
         }}
       >
         <div>
-          <h3 style={{ margin: 0, color: "#f8fafc" }}>💬 Active Matched Chats</h3>
+          <h3 style={{ margin: 0, color: "#f8fafc" }}>
+            💬 Active Matched Chats
+          </h3>
           <span style={{ fontSize: "0.8rem", color: "#94a3b8" }}>
             Near-Real-Time In-App Messaging • PRD §5.4 (US-11)
           </span>
         </div>
         {onBackToMatching && (
-          <button onClick={onBackToMatching} style={{ fontSize: "0.85rem", padding: "0.4rem 0.8rem" }}>
+          <button
+            onClick={onBackToMatching}
+            style={{ fontSize: "0.85rem", padding: "0.4rem 0.8rem" }}
+          >
             ← Back to Matching
           </button>
         )}
       </div>
 
       {errorAlert && (
-        <div className="error-alert" style={{ marginBottom: "1rem", display: "flex", justifyContent: "space-between" }}>
+        <div
+          className="error-alert"
+          style={{
+            marginBottom: "1rem",
+            display: "flex",
+            justifyContent: "space-between",
+          }}
+        >
           <span>{errorAlert}</span>
           <button
             onClick={() => setErrorAlert(null)}
-            style={{ background: "transparent", border: "none", color: "#ef4444", fontWeight: "bold", cursor: "pointer" }}
+            style={{
+              background: "transparent",
+              border: "none",
+              color: "#ef4444",
+              fontWeight: "bold",
+              cursor: "pointer",
+            }}
           >
             ✕
           </button>
@@ -225,24 +245,54 @@ export function ChatView({ user, initialChatId = null, onBackToMatching }) {
             borderRadius: "12px",
           }}
         >
-          <div style={{ fontWeight: "bold", color: "#94a3b8", fontSize: "0.85rem", marginBottom: "0.4rem" }}>
+          <div
+            style={{
+              fontWeight: "bold",
+              color: "#94a3b8",
+              fontSize: "0.85rem",
+              marginBottom: "0.4rem",
+            }}
+          >
             CONVERSATIONS ({chatList.length})
           </div>
 
           {loadingList ? (
-            <div style={{ color: "#94a3b8", fontSize: "0.85rem", padding: "1rem 0" }}>
+            <div
+              style={{
+                color: "#94a3b8",
+                fontSize: "0.85rem",
+                padding: "1rem 0",
+              }}
+            >
               Loading matched chats...
             </div>
           ) : chatList.length === 0 ? (
-            <div style={{ color: "#94a3b8", fontSize: "0.85rem", padding: "1.5rem 0.5rem", textAlign: "center" }}>
+            <div
+              style={{
+                color: "#94a3b8",
+                fontSize: "0.85rem",
+                padding: "1.5rem 0.5rem",
+                textAlign: "center",
+              }}
+            >
               <p style={{ margin: 0, fontSize: "1.5rem" }}>💬</p>
-              <p style={{ margin: "0.5rem 0", fontWeight: "600" }}>No active chats yet</p>
+              <p style={{ margin: "0.5rem 0", fontWeight: "600" }}>
+                No active chats yet
+              </p>
               <p style={{ fontSize: "0.75rem", color: "#64748b", margin: 0 }}>
-                When you and another candidate express mutual interest, your private chat will unlock here automatically!
+                When you and another candidate express mutual interest, your
+                private chat will unlock here automatically!
               </p>
             </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", overflowY: "auto" }}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.4rem",
+                overflowY: "auto",
+              }}
+            >
               {chatList.map((chat) => {
                 const isSelected = chat._id === activeChatId;
                 const candidate = chat.otherParticipant || {};
@@ -257,23 +307,48 @@ export function ChatView({ user, initialChatId = null, onBackToMatching }) {
                       borderRadius: "8px",
                       cursor: "pointer",
                       backgroundColor: isSelected ? "#1e293b" : "transparent",
-                      border: isSelected ? "1px solid #38bdf8" : "1px solid transparent",
+                      border: isSelected
+                        ? "1px solid #38bdf8"
+                        : "1px solid transparent",
                       transition: "all 0.15s ease",
                     }}
                   >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontWeight: "bold", fontSize: "0.9rem", color: isSelected ? "#38bdf8" : "#f8fafc" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontWeight: "bold",
+                          fontSize: "0.9rem",
+                          color: isSelected ? "#38bdf8" : "#f8fafc",
+                        }}
+                      >
                         {candidate.name || "Matched User"}
                       </span>
                       {chat.unreadCount > 0 && (
-                        <span className="badge badge-success" style={{ fontSize: "0.7rem", padding: "1px 6px" }}>
+                        <span
+                          className="badge badge-success"
+                          style={{ fontSize: "0.7rem", padding: "1px 6px" }}
+                        >
                           {chat.unreadCount} new
                         </span>
                       )}
                     </div>
 
-                    <div style={{ fontSize: "0.75rem", color: "#a5b4fc", marginTop: "2px", textTransform: "capitalize" }}>
-                      {candidate.role || "User"} • {candidate.city || "Launch City"}
+                    <div
+                      style={{
+                        fontSize: "0.75rem",
+                        color: "#a5b4fc",
+                        marginTop: "2px",
+                        textTransform: "capitalize",
+                      }}
+                    >
+                      {candidate.role || "User"} •{" "}
+                      {candidate.city || "Launch City"}
                     </div>
 
                     {lastMsg && (
@@ -287,7 +362,8 @@ export function ChatView({ user, initialChatId = null, onBackToMatching }) {
                           textOverflow: "ellipsis",
                         }}
                       >
-                        {lastMsg.senderId === currentUserId ? "You: " : ""}{lastMsg.text}
+                        {lastMsg.senderId === currentUserId ? "You: " : ""}
+                        {lastMsg.text}
                       </div>
                     )}
                   </div>
@@ -323,12 +399,23 @@ export function ChatView({ user, initialChatId = null, onBackToMatching }) {
                   alignItems: "center",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.75rem",
+                  }}
+                >
                   {otherParticipant.photoUrl ? (
                     <img
                       src={otherParticipant.photoUrl}
                       alt={otherParticipant.name}
-                      style={{ width: "40px", height: "40px", borderRadius: "50%", objectFit: "cover" }}
+                      style={{
+                        width: "40px",
+                        height: "40px",
+                        borderRadius: "50%",
+                        objectFit: "cover",
+                      }}
                     />
                   ) : (
                     <div
@@ -349,22 +436,56 @@ export function ChatView({ user, initialChatId = null, onBackToMatching }) {
                   )}
 
                   <div>
-                    <h4 style={{ margin: 0, color: "#f8fafc", fontSize: "1.05rem" }}>
+                    <h4
+                      style={{
+                        margin: 0,
+                        color: "#f8fafc",
+                        fontSize: "1.05rem",
+                      }}
+                    >
                       {otherParticipant.name || "Matched Candidate"}
                     </h4>
-                    <span style={{ fontSize: "0.75rem", color: "#38bdf8", textTransform: "capitalize" }}>
-                      {otherParticipant.role} • 📍 {otherParticipant.locality ? `${otherParticipant.locality}, ` : ""}{otherParticipant.city || "Launch City"}
+                    <span
+                      style={{
+                        fontSize: "0.75rem",
+                        color: "#38bdf8",
+                        textTransform: "capitalize",
+                      }}
+                    >
+                      {otherParticipant.role} • 📍{" "}
+                      {otherParticipant.locality
+                        ? `${otherParticipant.locality}, `
+                        : ""}
+                      {otherParticipant.city || "Launch City"}
                     </span>
                   </div>
                 </div>
 
-                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                  <span style={{ fontSize: "0.75rem", color: "#22c55e", fontWeight: "600" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.75rem",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: "0.75rem",
+                      color: "#22c55e",
+                      fontWeight: "600",
+                    }}
+                  >
                     ● Matched & Active
                   </span>
                   <button
                     onClick={() => setShowReportModal(true)}
-                    style={{ background: "#ef444420", border: "1px solid #ef4444", color: "#ef4444", fontSize: "0.75rem", padding: "0.3rem 0.6rem" }}
+                    style={{
+                      background: "#ef444420",
+                      border: "1px solid #ef4444",
+                      color: "#ef4444",
+                      fontSize: "0.75rem",
+                      padding: "0.3rem 0.6rem",
+                    }}
                   >
                     🚨 Report User
                   </button>
@@ -382,7 +503,8 @@ export function ChatView({ user, initialChatId = null, onBackToMatching }) {
                   textAlign: "center",
                 }}
               >
-                🔒 Contact info is never auto-shared. You can voluntarily share contact details inside messages if you choose.
+                🔒 Contact info is never auto-shared. You can voluntarily share
+                contact details inside messages if you choose.
               </div>
 
               {/* Messages Container */}
@@ -398,12 +520,27 @@ export function ChatView({ user, initialChatId = null, onBackToMatching }) {
                 }}
               >
                 {loadingMessages ? (
-                  <div style={{ color: "#94a3b8", fontSize: "0.85rem", textAlign: "center", margin: "auto" }}>
+                  <div
+                    style={{
+                      color: "#94a3b8",
+                      fontSize: "0.85rem",
+                      textAlign: "center",
+                      margin: "auto",
+                    }}
+                  >
                     Loading message history...
                   </div>
                 ) : messages.length === 0 ? (
-                  <div style={{ color: "#94a3b8", fontSize: "0.85rem", textAlign: "center", margin: "auto" }}>
-                    👋 Say hi to {otherParticipant.name}! Start the conversation below.
+                  <div
+                    style={{
+                      color: "#94a3b8",
+                      fontSize: "0.85rem",
+                      textAlign: "center",
+                      margin: "auto",
+                    }}
+                  >
+                    👋 Say hi to {otherParticipant.name}! Start the conversation
+                    below.
                   </div>
                 ) : (
                   messages.map((msg) => {
@@ -421,7 +558,9 @@ export function ChatView({ user, initialChatId = null, onBackToMatching }) {
                           style={{
                             maxWidth: "75%",
                             padding: "0.65rem 0.95rem",
-                            borderRadius: isMe ? "14px 14px 2px 14px" : "14px 14px 14px 2px",
+                            borderRadius: isMe
+                              ? "14px 14px 2px 14px"
+                              : "14px 14px 14px 2px",
                             backgroundColor: isMe ? "#2563eb" : "#1e293b",
                             color: "#f8fafc",
                             fontSize: "0.9rem",
@@ -521,10 +660,19 @@ export function ChatView({ user, initialChatId = null, onBackToMatching }) {
                 textAlign: "center",
               }}
             >
-              <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>💬</div>
+              <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>
+                💬
+              </div>
               <h4>Select a Matched Conversation</h4>
-              <p style={{ fontSize: "0.85rem", maxWidth: "320px", color: "#64748b" }}>
-                Choose a matched chat from the left panel to view messages or start chatting.
+              <p
+                style={{
+                  fontSize: "0.85rem",
+                  maxWidth: "320px",
+                  color: "#64748b",
+                }}
+              >
+                Choose a matched chat from the left panel to view messages or
+                start chatting.
               </p>
             </div>
           )}
@@ -534,11 +682,18 @@ export function ChatView({ user, initialChatId = null, onBackToMatching }) {
       {/* Report Modal inside Chat */}
       {showReportModal && otherParticipant && (
         <ReportModal
-          reportedUserId={otherParticipant.userId || otherParticipant.candidateId || otherParticipant.id || otherParticipant._id}
+          reportedUserId={
+            otherParticipant.userId ||
+            otherParticipant.candidateId ||
+            otherParticipant.id ||
+            otherParticipant._id
+          }
           reportedUserName={otherParticipant.name}
           onClose={() => setShowReportModal(false)}
           onReportSubmitted={() => {
-            setErrorAlert("Report submitted successfully to platform moderators.");
+            setErrorAlert(
+              "Report submitted successfully to platform moderators.",
+            );
           }}
         />
       )}

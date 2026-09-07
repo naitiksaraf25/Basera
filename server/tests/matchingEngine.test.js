@@ -13,7 +13,9 @@ console.log("   RUNNING MATCHING ENGINE UNIT TEST SUITE      ");
 console.log("=================================================");
 
 function testExactMatchScoring() {
-  console.log("\n[TEST 1] Testing Exact Match Scoring (100 Points Expected)...");
+  console.log(
+    "\n[TEST 1] Testing Exact Match Scoring (100 Points Expected)...",
+  );
 
   const requester = {
     userId: "user_req_1",
@@ -53,7 +55,11 @@ function testHardFiltersExclusion() {
 
   // Candidate 1: Self Match
   const selfCand = { ...requester, userId: "user_req_2", gender: "female" };
-  assert.strictEqual(passesHardFilters(requester, selfCand), false, "Should exclude self-match");
+  assert.strictEqual(
+    passesHardFilters(requester, selfCand),
+    false,
+    "Should exclude self-match",
+  );
 
   // Candidate 2: Gender Mismatch
   const maleCand = {
@@ -63,7 +69,11 @@ function testHardFiltersExclusion() {
     accountStatus: "active",
     platformVerification: { status: "verified" },
   };
-  assert.strictEqual(passesHardFilters(requester, maleCand), false, "Should exclude gender mismatch");
+  assert.strictEqual(
+    passesHardFilters(requester, maleCand),
+    false,
+    "Should exclude gender mismatch",
+  );
 
   // Candidate 3: Pending Verification
   const unverifiedCand = {
@@ -73,7 +83,11 @@ function testHardFiltersExclusion() {
     accountStatus: "active",
     platformVerification: { status: "pending" },
   };
-  assert.strictEqual(passesHardFilters(requester, unverifiedCand), false, "Should exclude unverified candidate");
+  assert.strictEqual(
+    passesHardFilters(requester, unverifiedCand),
+    false,
+    "Should exclude unverified candidate",
+  );
 
   // Candidate 4: Suspended Account
   const suspendedCand = {
@@ -83,7 +97,11 @@ function testHardFiltersExclusion() {
     accountStatus: "suspended",
     platformVerification: { status: "verified" },
   };
-  assert.strictEqual(passesHardFilters(requester, suspendedCand), false, "Should exclude suspended candidate");
+  assert.strictEqual(
+    passesHardFilters(requester, suspendedCand),
+    false,
+    "Should exclude suspended candidate",
+  );
 
   // Candidate 5: Valid Candidate
   const validCand = {
@@ -93,7 +111,11 @@ function testHardFiltersExclusion() {
     accountStatus: "active",
     platformVerification: { status: "verified" },
   };
-  assert.strictEqual(passesHardFilters(requester, validCand), true, "Should allow valid candidate");
+  assert.strictEqual(
+    passesHardFilters(requester, validCand),
+    true,
+    "Should allow valid candidate",
+  );
 
   console.log("✅ PASSED: All hard filter exclusions working correctly.");
 }
@@ -111,28 +133,48 @@ function testBudgetClosenessFormula() {
   // Case 2: 25% diff (halfway between 10% and 40%, ratio = 0.5)
   const cand25 = { rent: 1875 }; // diff = 375 / 1500 = 25%
   const ratio25 = scoreBudgetCloseness(requester, cand25);
-  assert.strictEqual(Math.round(ratio25 * 100) / 100, 0.5, "25% diff should give 0.5 ratio");
+  assert.strictEqual(
+    Math.round(ratio25 * 100) / 100,
+    0.5,
+    "25% diff should give 0.5 ratio",
+  );
 
   // Case 3: >40% diff (ratio = 0.0)
   const cand50 = { rent: 2500 }; // diff = 1000 / 1500 = 66%
   const ratio50 = scoreBudgetCloseness(requester, cand50);
   assert.strictEqual(ratio50, 0.0, ">40% diff should give 0 score");
 
-  console.log("✅ PASSED: Budget closeness formula and linear decay curve verified.");
+  console.log(
+    "✅ PASSED: Budget closeness formula and linear decay curve verified.",
+  );
 }
 
 function testCleanlinessAndLocalityScoring() {
   console.log("\n[TEST 4] Testing Cleanliness & Locality Decay...");
 
-  assert.strictEqual(scoreCleanliness(5, 5), 1.0, "Exact cleanliness should be 1.0");
-  assert.strictEqual(scoreCleanliness(5, 4), 0.5, "1 level apart cleanliness should be 0.5");
-  assert.strictEqual(scoreCleanliness(5, 3), 0.0, "2+ levels apart cleanliness should be 0.0");
+  assert.strictEqual(
+    scoreCleanliness(5, 5),
+    1.0,
+    "Exact cleanliness should be 1.0",
+  );
+  assert.strictEqual(
+    scoreCleanliness(5, 4),
+    0.5,
+    "1 level apart cleanliness should be 0.5",
+  );
+  assert.strictEqual(
+    scoreCleanliness(5, 3),
+    0.0,
+    "2+ levels apart cleanliness should be 0.0",
+  );
 
   console.log("✅ PASSED: Cleanliness decay logic verified.");
 }
 
 function testLandlordProxyScoringAndFairNormalization() {
-  console.log("\n[TEST 5] Testing Pure Landlord Listing Proxy Scoring & Fair Normalization...");
+  console.log(
+    "\n[TEST 5] Testing Pure Landlord Listing Proxy Scoring & Fair Normalization...",
+  );
 
   const seekerRequester = {
     userId: "seeker_1",
@@ -165,27 +207,54 @@ function testLandlordProxyScoringAndFairNormalization() {
       guestPolicy: "daytime_only", // proxy guestsFrequency = 'rarely' -> 10 pts
       curfew: "11_pm", // proxy sleepSchedule = 'early_bird' -> 20 pts
     },
-    user: { accountStatus: "active", platformVerification: { status: "verified" } },
+    user: {
+      accountStatus: "active",
+      platformVerification: { status: "verified" },
+    },
   };
 
-  const evalResult = scoreCandidate(seekerRequester, landlordListing, DEFAULT_WEIGHTS);
-  console.log(`  Evaluated Points: ${evalResult.maxApplicablePoints} / 100 total possible weights`);
+  const evalResult = scoreCandidate(
+    seekerRequester,
+    landlordListing,
+    DEFAULT_WEIGHTS,
+  );
+  console.log(
+    `  Evaluated Points: ${evalResult.maxApplicablePoints} / 100 total possible weights`,
+  );
   console.log(`  Raw Score Sum: ${evalResult.rawScoreSum}`);
   console.log(`  Raw Normalized Score: ${evalResult.normalizedScore} / 100`);
   console.log(`  Confidence-Weighted Final Score: ${evalResult.score} / 100`);
-  console.log(`  Coverage Label: ${evalResult.factorCoverage.confidenceLabel} (${evalResult.factorCoverage.coveragePercentage}% factor coverage)`);
+  console.log(
+    `  Coverage Label: ${evalResult.factorCoverage.confidenceLabel} (${evalResult.factorCoverage.coveragePercentage}% factor coverage)`,
+  );
 
   // Evaluated factors: sleepSchedule (20), smokingDrinking (20), guestsFrequency (10), cityProximity (5), budgetCloseness (5) = 60 pts
   // Raw normalized: (60 / 60) * 100 = 100
   // Confidence weighted: 0.60 * 100 + 0.40 * 50 = 80.0
-  assert.strictEqual(evalResult.normalizedScore, 100, "Raw normalized score should be 100");
-  assert.strictEqual(evalResult.score, 80, "Confidence-weighted final score should be 80.0");
-  assert.strictEqual(evalResult.factorCoverage.coveragePercentage, 60, "Factor coverage percentage should be 60%");
-  console.log("✅ PASSED: Pure landlord listing hybrid confidence-weighted score & factor coverage verified.");
+  assert.strictEqual(
+    evalResult.normalizedScore,
+    100,
+    "Raw normalized score should be 100",
+  );
+  assert.strictEqual(
+    evalResult.score,
+    80,
+    "Confidence-weighted final score should be 80.0",
+  );
+  assert.strictEqual(
+    evalResult.factorCoverage.coveragePercentage,
+    60,
+    "Factor coverage percentage should be 60%",
+  );
+  console.log(
+    "✅ PASSED: Pure landlord listing hybrid confidence-weighted score & factor coverage verified.",
+  );
 }
 
 function testLandlordLinkedTenantBlending() {
-  console.log("\n[TEST 6] Testing Landlord 50/50 Linked Tenant Score Blending...");
+  console.log(
+    "\n[TEST 6] Testing Landlord 50/50 Linked Tenant Score Blending...",
+  );
 
   const seekerRequester = {
     userId: "seeker_1",
@@ -217,7 +286,10 @@ function testLandlordLinkedTenantBlending() {
       guestPolicy: "daytime_only",
       curfew: "11_pm",
     },
-    user: { accountStatus: "active", platformVerification: { status: "verified" } },
+    user: {
+      accountStatus: "active",
+      platformVerification: { status: "verified" },
+    },
     // Linked tenant profile with lower cleanliness (3 vs 5 -> 0 pts)
     linkedTenantProfiles: [
       {
@@ -237,12 +309,21 @@ function testLandlordLinkedTenantBlending() {
     ],
   };
 
-  const evalResult = scoreCandidate(seekerRequester, landlordWithTenant, DEFAULT_WEIGHTS);
+  const evalResult = scoreCandidate(
+    seekerRequester,
+    landlordWithTenant,
+    DEFAULT_WEIGHTS,
+  );
   console.log(`  House Rules Normalized Score: 100.0`);
-  console.log(`  Linked Tenant Average Score: ${evalResult.breakdown.linkedTenantsAverage}`);
+  console.log(
+    `  Linked Tenant Average Score: ${evalResult.breakdown.linkedTenantsAverage}`,
+  );
   console.log(`  Blended 50/50 Final Score: ${evalResult.score}`);
 
-  assert(evalResult.score < 100 && evalResult.score > 70, "Blended score should be average of house rules and tenant lifestyle");
+  assert(
+    evalResult.score < 100 && evalResult.score > 70,
+    "Blended score should be average of house rules and tenant lifestyle",
+  );
   console.log("✅ PASSED: 50/50 linked tenant score blending verified.");
 }
 
@@ -285,7 +366,9 @@ function testTop3TruncationAndSorting() {
   const result = computeMatches(requester, candidates);
   console.log(`  Total Eligible Candidates: ${result.totalEligibleCount}`);
   console.log(`  Results Truncated Count: ${result.results.length}`);
-  console.log(`  Top 3 Scores: ${result.results.map((r) => r.score).join(", ")}`);
+  console.log(
+    `  Top 3 Scores: ${result.results.map((r) => r.score).join(", ")}`,
+  );
 
   assert.strictEqual(result.totalEligibleCount, 5);
   assert.strictEqual(result.results.length, 3);
@@ -296,7 +379,9 @@ function testTop3TruncationAndSorting() {
 }
 
 function testFewerThan3EligibleCandidates() {
-  console.log("\n[TEST 8] Testing Fewer Than 3 Eligible Candidates Edge Case...");
+  console.log(
+    "\n[TEST 8] Testing Fewer Than 3 Eligible Candidates Edge Case...",
+  );
 
   const requester = {
     userId: "req_user",
@@ -326,13 +411,20 @@ function testFewerThan3EligibleCandidates() {
 
   assert.strictEqual(result.results.length, 1);
   assert.strictEqual(result.totalEligibleCount, 1);
-  assert.strictEqual(result.message, "Found 1 eligible match(es) in launch city.");
+  assert.strictEqual(
+    result.message,
+    "Found 1 eligible match(es) in launch city.",
+  );
 
-  console.log("✅ PASSED: Fewer than 3 candidates handled gracefully with explanatory message.");
+  console.log(
+    "✅ PASSED: Fewer than 3 candidates handled gracefully with explanatory message.",
+  );
 }
 
 function testRoomTypeHardFilterAndBackwardCompatibility() {
-  console.log("\n[TEST 9] Testing Preferred Room Type Hard Filter & Backward Compatibility...");
+  console.log(
+    "\n[TEST 9] Testing Preferred Room Type Hard Filter & Backward Compatibility...",
+  );
 
   const baseRequester = {
     userId: "req_rt_user",
@@ -361,22 +453,51 @@ function testRoomTypeHardFilterAndBackwardCompatibility() {
   };
 
   // Case 1: Requester requires private_room -> pg_bed candidate excluded, private_room candidate allowed
-  const privateRoomReq = { ...baseRequester, preferredRoomType: "private_room" };
-  assert.strictEqual(passesHardFilters(privateRoomReq, privateRoomCand), true, "Matching roomType 'private_room' MUST be allowed");
-  assert.strictEqual(passesHardFilters(privateRoomReq, pgBedCand), false, "Mismatched roomType 'pg_bed' MUST be hard-filter excluded");
+  const privateRoomReq = {
+    ...baseRequester,
+    preferredRoomType: "private_room",
+  };
+  assert.strictEqual(
+    passesHardFilters(privateRoomReq, privateRoomCand),
+    true,
+    "Matching roomType 'private_room' MUST be allowed",
+  );
+  assert.strictEqual(
+    passesHardFilters(privateRoomReq, pgBedCand),
+    false,
+    "Mismatched roomType 'pg_bed' MUST be hard-filter excluded",
+  );
 
   // Case 2: Requester sets preferredRoomType: "any" -> all room types allowed
   const anyRoomReq = { ...baseRequester, preferredRoomType: "any" };
-  assert.strictEqual(passesHardFilters(anyRoomReq, privateRoomCand), true, "RoomType 'any' MUST allow private_room candidate");
-  assert.strictEqual(passesHardFilters(anyRoomReq, pgBedCand), true, "RoomType 'any' MUST allow pg_bed candidate");
+  assert.strictEqual(
+    passesHardFilters(anyRoomReq, privateRoomCand),
+    true,
+    "RoomType 'any' MUST allow private_room candidate",
+  );
+  assert.strictEqual(
+    passesHardFilters(anyRoomReq, pgBedCand),
+    true,
+    "RoomType 'any' MUST allow pg_bed candidate",
+  );
 
   // Case 3: Legacy Requester profile without preferredRoomType field at all (undefined/missing) -> BACKWARD COMPATIBILITY CHECK
   const legacyReqWithoutRoomPref = { ...baseRequester }; // preferredRoomType is undefined
   assert.strictEqual(legacyReqWithoutRoomPref.preferredRoomType, undefined);
-  assert.strictEqual(passesHardFilters(legacyReqWithoutRoomPref, privateRoomCand), true, "Legacy requester with missing preferredRoomType MUST allow private_room candidate");
-  assert.strictEqual(passesHardFilters(legacyReqWithoutRoomPref, pgBedCand), true, "Legacy requester with missing preferredRoomType MUST allow pg_bed candidate");
+  assert.strictEqual(
+    passesHardFilters(legacyReqWithoutRoomPref, privateRoomCand),
+    true,
+    "Legacy requester with missing preferredRoomType MUST allow private_room candidate",
+  );
+  assert.strictEqual(
+    passesHardFilters(legacyReqWithoutRoomPref, pgBedCand),
+    true,
+    "Legacy requester with missing preferredRoomType MUST allow pg_bed candidate",
+  );
 
-  console.log("✅ PASSED: Room type hard filter and legacy profile backward compatibility verified.");
+  console.log(
+    "✅ PASSED: Room type hard filter and legacy profile backward compatibility verified.",
+  );
 }
 
 function runAllTests() {

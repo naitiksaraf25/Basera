@@ -19,19 +19,26 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, "../.env") });
 dotenv.config();
 
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/roomiematch";
+const MONGODB_URI =
+  process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/roomiematch";
 let client;
 try {
   client = new MongoClient(MONGODB_URI, { serverSelectionTimeoutMS: 10000 });
   await client.connect();
-  console.log(`[Auth DB] Successfully connected to primary MongoDB at ${MONGODB_URI}`);
+  console.log(
+    `[Auth DB] Successfully connected to primary MongoDB at ${MONGODB_URI}`,
+  );
 } catch (err) {
-  console.error(`[Auth DB Error] Failed to connect to primary MONGODB_URI (${err.message}). Retrying...`);
+  console.error(
+    `[Auth DB Error] Failed to connect to primary MONGODB_URI (${err.message}). Retrying...`,
+  );
   // Retry connection once with explicit DNS resolvers
   dns.setServers(["8.8.8.8", "1.1.1.1"]);
   client = new MongoClient(MONGODB_URI, { serverSelectionTimeoutMS: 10000 });
   await client.connect();
-  console.log(`[Auth DB] Successfully connected on retry to MongoDB at ${MONGODB_URI}`);
+  console.log(
+    `[Auth DB] Successfully connected on retry to MongoDB at ${MONGODB_URI}`,
+  );
 }
 const db = client.db();
 
@@ -62,7 +69,8 @@ export const auth = betterAuth({
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID || "placeholder_google_client_id",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "placeholder_google_client_secret",
+      clientSecret:
+        process.env.GOOGLE_CLIENT_SECRET || "placeholder_google_client_secret",
     },
   },
   user: {

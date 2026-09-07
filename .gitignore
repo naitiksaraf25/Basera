@@ -8,6 +8,7 @@ node_modules/
 .env.development.local
 .env.test.local
 .env.production.local
+.env.example
 
 # Uploads directory contents (preserve directory with .gitkeep)
 server/uploads/**/*
@@ -28,3 +29,7 @@ lerna-debug.log*
 # Operating System files
 .DS_Store
 Thumbs.db
+
+# Temporary screenshots
+screenshot*.png
+

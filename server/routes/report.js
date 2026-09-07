@@ -55,7 +55,8 @@ router.post("/", requireAuth, async (req, res) => {
     });
 
     return res.status(201).json({
-      message: "Report submitted successfully. Platform moderators will review it shortly.",
+      message:
+        "Report submitted successfully. Platform moderators will review it shortly.",
       report: newReport,
     });
   } catch (err) {

@@ -19,11 +19,14 @@ const matchInterestSchema = new mongoose.Schema(
       required: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Compound unique index ensuring one interest record per directional user pair
 matchInterestSchema.index({ fromUserId: 1, toUserId: 1 }, { unique: true });
 matchInterestSchema.index({ toUserId: 1, fromUserId: 1 });
 
-export const MatchInterest = mongoose.model("MatchInterest", matchInterestSchema);
+export const MatchInterest = mongoose.model(
+  "MatchInterest",
+  matchInterestSchema,
+);

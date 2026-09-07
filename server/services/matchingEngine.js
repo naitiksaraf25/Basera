@@ -26,8 +26,13 @@ export const DEFAULT_WEIGHTS = {
 export function passesHardFilters(requester, candidate) {
   // Exclude self-match
   const requesterId = requester.userId || requester.id || requester._id;
-  const candidateId = candidate.userId || candidate.landlordId || candidate.id || candidate._id;
-  if (requesterId && candidateId && String(requesterId) === String(candidateId)) {
+  const candidateId =
+    candidate.userId || candidate.landlordId || candidate.id || candidate._id;
+  if (
+    requesterId &&
+    candidateId &&
+    String(requesterId) === String(candidateId)
+  ) {
     return false;
   }
 
@@ -37,7 +42,10 @@ export function passesHardFilters(requester, candidate) {
   if (candidateUser.accountStatus && candidateUser.accountStatus !== "active") {
     return false;
   }
-  if (candidateUser.platformVerification && candidateUser.platformVerification.status !== "verified") {
+  if (
+    candidateUser.platformVerification &&
+    candidateUser.platformVerification.status !== "verified"
+  ) {
     return false;
   }
 
@@ -61,7 +69,8 @@ export function passesHardFilters(requester, candidate) {
   }
 
   // Preferred Room Type Hard Filter (PRD §8.1)
-  const reqRoomPref = requester.preferredRoomType || requester.roomTypePreference;
+  const reqRoomPref =
+    requester.preferredRoomType || requester.roomTypePreference;
   const candRoomType = candidate.roomType;
 
   if (
@@ -84,7 +93,13 @@ export function passesHardFilters(requester, candidate) {
 
 // Cleanliness (25 pts max)
 export function scoreCleanliness(reqVal, candVal) {
-  if (reqVal === undefined || candVal === undefined || reqVal === null || candVal === null) return null;
+  if (
+    reqVal === undefined ||
+    candVal === undefined ||
+    reqVal === null ||
+    candVal === null
+  )
+    return null;
   const diff = Math.abs(Number(reqVal) - Number(candVal));
   if (diff === 0) return 1.0;
   if (diff === 1) return 0.5;
@@ -94,7 +109,8 @@ export function scoreCleanliness(reqVal, candVal) {
 // Sleep Schedule (20 pts max)
 export function scoreSleepSchedule(reqVal, candVal) {
   if (!reqVal || !candVal) return null;
-  if (reqVal === candVal || reqVal === "flexible" || candVal === "flexible") return 1.0;
+  if (reqVal === candVal || reqVal === "flexible" || candVal === "flexible")
+    return 1.0;
   if (
     (reqVal === "early_bird" && candVal === "night_owl") ||
     (reqVal === "night_owl" && candVal === "early_bird")
@@ -121,8 +137,10 @@ export function scoreFoodPreference(reqVal, candVal) {
   if (!reqVal || !candVal) return null;
   if (reqVal === candVal || reqVal === "any" || candVal === "any") return 1.0;
   if (
-    (reqVal === "vegetarian" && (candVal === "eggetarian" || candVal === "vegan")) ||
-    (candVal === "vegetarian" && (reqVal === "eggetarian" || reqVal === "vegan"))
+    (reqVal === "vegetarian" &&
+      (candVal === "eggetarian" || candVal === "vegan")) ||
+    (candVal === "vegetarian" &&
+      (reqVal === "eggetarian" || reqVal === "vegan"))
   ) {
     return 0.7;
   }
@@ -138,7 +156,8 @@ export function scoreFoodPreference(reqVal, candVal) {
 // Guests Frequency (10 pts max)
 export function scoreGuestsFrequency(reqVal, candVal) {
   if (!reqVal || !candVal) return null;
-  if (reqVal === candVal || reqVal === "anytime" || candVal === "anytime") return 1.0;
+  if (reqVal === candVal || reqVal === "anytime" || candVal === "anytime")
+    return 1.0;
   const order = ["never", "rarely", "weekends_only", "frequently", "anytime"];
   const i1 = order.indexOf(reqVal);
   const i2 = order.indexOf(candVal);
@@ -151,8 +170,14 @@ export function scoreGuestsFrequency(reqVal, candVal) {
 // City Proximity (5 pts max)
 export function scoreCityProximity(reqCity, reqLoc, candCity, candLoc) {
   if (!reqCity || !candCity) return null;
-  if (reqCity.toLowerCase().trim() !== candCity.toLowerCase().trim()) return 0.0;
-  if (reqLoc && candLoc && reqLoc.toLowerCase().trim() === candLoc.toLowerCase().trim()) return 1.0;
+  if (reqCity.toLowerCase().trim() !== candCity.toLowerCase().trim())
+    return 0.0;
+  if (
+    reqLoc &&
+    candLoc &&
+    reqLoc.toLowerCase().trim() === candLoc.toLowerCase().trim()
+  )
+    return 1.0;
   return 0.6; // Same city, different or unstated locality
 }
 
@@ -167,7 +192,10 @@ export function scoreBudgetCloseness(requester, candidate) {
   let reqTarget;
   if (requester.rent !== undefined) {
     reqTarget = Number(requester.rent);
-  } else if (requester.budgetMin !== undefined && requester.budgetMax !== undefined) {
+  } else if (
+    requester.budgetMin !== undefined &&
+    requester.budgetMax !== undefined
+  ) {
     reqTarget = (Number(requester.budgetMin) + Number(requester.budgetMax)) / 2;
   } else {
     return null;
@@ -176,25 +204,30 @@ export function scoreBudgetCloseness(requester, candidate) {
   let candTarget;
   if (candidate.rent !== undefined) {
     candTarget = Number(candidate.rent);
-  } else if (candidate.budgetMin !== undefined && candidate.budgetMax !== undefined) {
-    candTarget = (Number(candidate.budgetMin) + Number(candidate.budgetMax)) / 2;
+  } else if (
+    candidate.budgetMin !== undefined &&
+    candidate.budgetMax !== undefined
+  ) {
+    candTarget =
+      (Number(candidate.budgetMin) + Number(candidate.budgetMax)) / 2;
   } else {
     return null;
   }
 
-  if (!reqTarget || reqTarget <= 0 || !candTarget || candTarget <= 0) return null;
+  if (!reqTarget || reqTarget <= 0 || !candTarget || candTarget <= 0)
+    return null;
 
   const percentDiff = Math.abs(reqTarget - candTarget) / reqTarget;
 
-  if (percentDiff <= 0.10) {
+  if (percentDiff <= 0.1) {
     return 1.0;
   }
-  if (percentDiff > 0.40) {
+  if (percentDiff > 0.4) {
     return 0.0;
   }
 
   // Linear decay between 10% and 40%
-  const decayFactor = 1.0 - (percentDiff - 0.10) / 0.30;
+  const decayFactor = 1.0 - (percentDiff - 0.1) / 0.3;
   return Math.max(0.0, Math.min(1.0, decayFactor));
 }
 
@@ -207,7 +240,10 @@ export function mapHouseRulesToProxies(houseRules) {
   const proxies = {};
 
   // Smoking / Drinking Proxy
-  if (houseRules.smokingAllowed === false && houseRules.drinkingAllowed === false) {
+  if (
+    houseRules.smokingAllowed === false &&
+    houseRules.drinkingAllowed === false
+  ) {
     proxies.smokingDrinking = "none";
   } else if (houseRules.smokingAllowed === false) {
     proxies.smokingDrinking = "social";
@@ -240,7 +276,11 @@ export function mapHouseRulesToProxies(houseRules) {
  * Core Candidate Scoring Engine
  * Computes raw weighted scores, max applicable weights, and normalized final score (0-100).
  */
-export function scoreCandidate(requester, candidate, weights = DEFAULT_WEIGHTS) {
+export function scoreCandidate(
+  requester,
+  candidate,
+  weights = DEFAULT_WEIGHTS,
+) {
   let candFactorValues = { ...candidate };
 
   // If candidate is a Landlord Listing without lifestyle fields, extract proxies
@@ -258,45 +298,93 @@ export function scoreCandidate(requester, candidate, weights = DEFAULT_WEIGHTS) 
   const factorEvaluations = [];
 
   // Evaluate Cleanliness
-  const cleanlinessRatio = scoreCleanliness(reqFactorValues.cleanliness, candFactorValues.cleanliness);
+  const cleanlinessRatio = scoreCleanliness(
+    reqFactorValues.cleanliness,
+    candFactorValues.cleanliness,
+  );
   if (cleanlinessRatio !== null) {
-    factorEvaluations.push({ factor: "cleanliness", weight: weights.cleanliness, ratio: cleanlinessRatio });
+    factorEvaluations.push({
+      factor: "cleanliness",
+      weight: weights.cleanliness,
+      ratio: cleanlinessRatio,
+    });
   }
 
   // Evaluate Sleep Schedule
-  const sleepRatio = scoreSleepSchedule(reqFactorValues.sleepSchedule, candFactorValues.sleepSchedule);
+  const sleepRatio = scoreSleepSchedule(
+    reqFactorValues.sleepSchedule,
+    candFactorValues.sleepSchedule,
+  );
   if (sleepRatio !== null) {
-    factorEvaluations.push({ factor: "sleepSchedule", weight: weights.sleepSchedule, ratio: sleepRatio });
+    factorEvaluations.push({
+      factor: "sleepSchedule",
+      weight: weights.sleepSchedule,
+      ratio: sleepRatio,
+    });
   }
 
   // Evaluate Smoking/Drinking
-  const smokeRatio = scoreSmokingDrinking(reqFactorValues.smokingDrinking, candFactorValues.smokingDrinking);
+  const smokeRatio = scoreSmokingDrinking(
+    reqFactorValues.smokingDrinking,
+    candFactorValues.smokingDrinking,
+  );
   if (smokeRatio !== null) {
-    factorEvaluations.push({ factor: "smokingDrinking", weight: weights.smokingDrinking, ratio: smokeRatio });
+    factorEvaluations.push({
+      factor: "smokingDrinking",
+      weight: weights.smokingDrinking,
+      ratio: smokeRatio,
+    });
   }
 
   // Evaluate Food Preference
-  const foodRatio = scoreFoodPreference(reqFactorValues.foodPreference, candFactorValues.foodPreference);
+  const foodRatio = scoreFoodPreference(
+    reqFactorValues.foodPreference,
+    candFactorValues.foodPreference,
+  );
   if (foodRatio !== null) {
-    factorEvaluations.push({ factor: "foodPreference", weight: weights.foodPreference, ratio: foodRatio });
+    factorEvaluations.push({
+      factor: "foodPreference",
+      weight: weights.foodPreference,
+      ratio: foodRatio,
+    });
   }
 
   // Evaluate Guests Frequency
-  const guestsRatio = scoreGuestsFrequency(reqFactorValues.guestsFrequency, candFactorValues.guestsFrequency);
+  const guestsRatio = scoreGuestsFrequency(
+    reqFactorValues.guestsFrequency,
+    candFactorValues.guestsFrequency,
+  );
   if (guestsRatio !== null) {
-    factorEvaluations.push({ factor: "guestsFrequency", weight: weights.guestsFrequency, ratio: guestsRatio });
+    factorEvaluations.push({
+      factor: "guestsFrequency",
+      weight: weights.guestsFrequency,
+      ratio: guestsRatio,
+    });
   }
 
   // Evaluate City Proximity
-  const cityRatio = scoreCityProximity(reqFactorValues.city, reqFactorValues.locality, candFactorValues.city, candFactorValues.locality);
+  const cityRatio = scoreCityProximity(
+    reqFactorValues.city,
+    reqFactorValues.locality,
+    candFactorValues.city,
+    candFactorValues.locality,
+  );
   if (cityRatio !== null) {
-    factorEvaluations.push({ factor: "cityProximity", weight: weights.cityProximity, ratio: cityRatio });
+    factorEvaluations.push({
+      factor: "cityProximity",
+      weight: weights.cityProximity,
+      ratio: cityRatio,
+    });
   }
 
   // Evaluate Budget Closeness
   const budgetRatio = scoreBudgetCloseness(reqFactorValues, candFactorValues);
   if (budgetRatio !== null) {
-    factorEvaluations.push({ factor: "budgetCloseness", weight: weights.budgetCloseness, ratio: budgetRatio });
+    factorEvaluations.push({
+      factor: "budgetCloseness",
+      weight: weights.budgetCloseness,
+      ratio: budgetRatio,
+    });
   }
 
   let rawScoreSum = 0;
@@ -315,12 +403,16 @@ export function scoreCandidate(requester, candidate, weights = DEFAULT_WEIGHTS) 
   let normalizedScore = 0;
   let finalScore = 0;
   const totalPossiblePoints = 100;
-  const confidenceFactor = Math.min(1.0, maxApplicablePoints / totalPossiblePoints);
+  const confidenceFactor = Math.min(
+    1.0,
+    maxApplicablePoints / totalPossiblePoints,
+  );
 
   if (maxApplicablePoints > 0) {
     normalizedScore = (rawScoreSum / maxApplicablePoints) * 100;
     // Shrinkage toward prior mean (50.0) based on factor coverage
-    finalScore = confidenceFactor * normalizedScore + (1 - confidenceFactor) * 50.0;
+    finalScore =
+      confidenceFactor * normalizedScore + (1 - confidenceFactor) * 50.0;
   }
 
   const factorCoverage = {
@@ -329,11 +421,20 @@ export function scoreCandidate(requester, candidate, weights = DEFAULT_WEIGHTS) 
     maxApplicablePoints,
     totalPossiblePoints,
     coveragePercentage: Math.round(confidenceFactor * 100),
-    confidenceLabel: confidenceFactor >= 0.9 ? "High" : confidenceFactor >= 0.5 ? "Medium" : "Low",
+    confidenceLabel:
+      confidenceFactor >= 0.9
+        ? "High"
+        : confidenceFactor >= 0.5
+          ? "Medium"
+          : "Low",
   };
 
   // Landlord Linked Tenant Score Blending (50/50 default)
-  if (candidate.linkedTenantProfiles && Array.isArray(candidate.linkedTenantProfiles) && candidate.linkedTenantProfiles.length > 0) {
+  if (
+    candidate.linkedTenantProfiles &&
+    Array.isArray(candidate.linkedTenantProfiles) &&
+    candidate.linkedTenantProfiles.length > 0
+  ) {
     let totalTenantScore = 0;
     let tenantCount = 0;
     for (const tenantProf of candidate.linkedTenantProfiles) {
@@ -364,19 +465,35 @@ export function scoreCandidate(requester, candidate, weights = DEFAULT_WEIGHTS) 
  * Main Pure-Function Entrypoint (PRD §8.3)
  * Given requester criteria and candidate list, returns top-3 scored & sorted results.
  */
-export function computeMatches(requester, candidates, weights = DEFAULT_WEIGHTS) {
+export function computeMatches(
+  requester,
+  candidates,
+  weights = DEFAULT_WEIGHTS,
+) {
   if (!requester || !Array.isArray(candidates)) {
     return { results: [], totalEligibleCount: 0 };
   }
 
   // 1. Filter out ineligible candidates via Hard Filters
-  const eligibleCandidates = candidates.filter((cand) => passesHardFilters(requester, cand));
+  const eligibleCandidates = candidates.filter((cand) =>
+    passesHardFilters(requester, cand),
+  );
 
   // 2. Score each candidate
   const scored = eligibleCandidates.map((candidate) => {
-    const { score, normalizedScore, breakdown, maxApplicablePoints, factorCoverage } = scoreCandidate(requester, candidate, weights);
+    const {
+      score,
+      normalizedScore,
+      breakdown,
+      maxApplicablePoints,
+      factorCoverage,
+    } = scoreCandidate(requester, candidate, weights);
     return {
-      candidateId: candidate.userId || candidate.landlordId || candidate.id || candidate._id,
+      candidateId:
+        candidate.userId ||
+        candidate.landlordId ||
+        candidate.id ||
+        candidate._id,
       candidate,
       score,
       normalizedScore,

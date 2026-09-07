@@ -12,7 +12,7 @@ const chatSchema = new mongoose.Schema(
       type: String,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Index on participantIds for fast chat querying

@@ -48,8 +48,12 @@ export const requireVerified = async (req, res, next) => {
     if (!isVerified) {
       return res.status(403).json({
         error: "Forbidden",
-        message: "Platform verification required. Current status: " + (req.user?.platformVerification?.status || "unverified"),
-        platformVerification: req.user?.platformVerification || { status: "unverified" },
+        message:
+          "Platform verification required. Current status: " +
+          (req.user?.platformVerification?.status || "unverified"),
+        platformVerification: req.user?.platformVerification || {
+          status: "unverified",
+        },
       });
     }
 
@@ -73,5 +77,3 @@ export const requireAdmin = async (req, res, next) => {
     next();
   });
 };
-
-

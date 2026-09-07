@@ -27,7 +27,7 @@ const messageSchema = new mongoose.Schema(
       default: null,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Compound index for efficient thread querying sorted by timestamp

@@ -18,7 +18,9 @@ export function WarningModal({ warning, onAcknowledged }) {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || data.error || "Failed to acknowledge warning.");
+        throw new Error(
+          data.message || data.error || "Failed to acknowledge warning.",
+        );
       }
 
       if (onAcknowledged) onAcknowledged();
@@ -58,7 +60,14 @@ export function WarningModal({ warning, onAcknowledged }) {
           boxShadow: "0 25px 50px -12px rgba(234, 179, 8, 0.25)",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.75rem",
+            marginBottom: "1rem",
+          }}
+        >
           <span style={{ fontSize: "2rem" }}>⚠️</span>
           <div>
             <h3 style={{ margin: 0, color: "#fef08a", fontSize: "1.25rem" }}>
@@ -71,7 +80,10 @@ export function WarningModal({ warning, onAcknowledged }) {
         </div>
 
         {error && (
-          <div className="error-alert" style={{ marginBottom: "1rem", fontSize: "0.85rem" }}>
+          <div
+            className="error-alert"
+            style={{ marginBottom: "1rem", fontSize: "0.85rem" }}
+          >
             {error}
           </div>
         )}
@@ -87,19 +99,48 @@ export function WarningModal({ warning, onAcknowledged }) {
             color: "#e2e8f0",
           }}
         >
-          <div style={{ fontWeight: "bold", color: "#eab308", marginBottom: "0.4rem" }}>
+          <div
+            style={{
+              fontWeight: "bold",
+              color: "#eab308",
+              marginBottom: "0.4rem",
+            }}
+          >
             Issue / Context: {warning.reason || "Platform Guidelines"}
           </div>
-          <p style={{ margin: 0, lineHeight: "1.5", fontSize: "0.85rem", color: "#f8fafc" }}>
-            "{warning.message || "You have received a warning from platform moderators. Please review our community guidelines."}"
+          <p
+            style={{
+              margin: 0,
+              lineHeight: "1.5",
+              fontSize: "0.85rem",
+              color: "#f8fafc",
+            }}
+          >
+            "
+            {warning.message ||
+              "You have received a warning from platform moderators. Please review our community guidelines."}
+            "
           </p>
-          <div style={{ fontSize: "0.75rem", color: "#94a3b8", marginTop: "0.6rem" }}>
+          <div
+            style={{
+              fontSize: "0.75rem",
+              color: "#94a3b8",
+              marginTop: "0.6rem",
+            }}
+          >
             Issued: {new Date(warning.createdAt).toLocaleString()}
           </div>
         </div>
 
-        <p style={{ fontSize: "0.8rem", color: "#cbd5e1", marginBottom: "1.25rem" }}>
-          Please acknowledge this notice to continue using RoomieMatch. Further violations may result in account suspension or permanent termination.
+        <p
+          style={{
+            fontSize: "0.8rem",
+            color: "#cbd5e1",
+            marginBottom: "1.25rem",
+          }}
+        >
+          Please acknowledge this notice to continue using RoomieMatch. Further
+          violations may result in account suspension or permanent termination.
         </p>
 
         <div style={{ display: "flex", justifyContent: "flex-end" }}>
@@ -116,7 +157,9 @@ export function WarningModal({ warning, onAcknowledged }) {
               border: "none",
             }}
           >
-            {submitting ? "Processing..." : "I Acknowledge & Agree to Guidelines ✓"}
+            {submitting
+              ? "Processing..."
+              : "I Acknowledge & Agree to Guidelines ✓"}
           </button>
         </div>
       </div>

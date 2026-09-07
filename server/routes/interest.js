@@ -31,18 +31,31 @@ router.post("/", requireAuth, requireVerified, async (req, res) => {
     const rawTargetId = req.body.toUserId || req.body.targetId;
 
     if (!rawTargetId) {
-      return res.status(400).json({ error: "Bad Request", message: "toUserId or targetId is required." });
+      return res
+        .status(400)
+        .json({
+          error: "Bad Request",
+          message: "toUserId or targetId is required.",
+        });
     }
 
     const toUserId = await resolveToUserId(rawTargetId);
 
     // Self-interest protection
     if (fromUserId === toUserId) {
-      return res.status(400).json({ error: "Bad Request", message: "You cannot express interest in yourself." });
+      return res
+        .status(400)
+        .json({
+          error: "Bad Request",
+          message: "You cannot express interest in yourself.",
+        });
     }
 
     // 1. Idempotency Edge Case #1: Check if direct interest already exists
-    const existingDirectInterest = await MatchInterest.findOne({ fromUserId, toUserId });
+    const existingDirectInterest = await MatchInterest.findOne({
+      fromUserId,
+      toUserId,
+    });
     if (existingDirectInterest) {
       let chatDoc = null;
       if (existingDirectInterest.status === "matched") {
@@ -63,7 +76,10 @@ router.post("/", requireAuth, requireVerified, async (req, res) => {
     }
 
     // 2. Check if reverse interest exists (toUserId -> fromUserId)
-    const reverseInterest = await MatchInterest.findOne({ fromUserId: toUserId, toUserId: fromUserId });
+    const reverseInterest = await MatchInterest.findOne({
+      fromUserId: toUserId,
+      toUserId: fromUserId,
+    });
 
     if (reverseInterest) {
       // Reverse interest exists! This creates a MUTUAL MATCH
@@ -74,7 +90,7 @@ router.post("/", requireAuth, requireVerified, async (req, res) => {
       const directInterest = await MatchInterest.findOneAndUpdate(
         { fromUserId, toUserId },
         { status: "matched" },
-        { upsert: true, new: true }
+        { upsert: true, new: true },
       );
 
       // Idempotency Edge Case #2: Reuse existing chat or create new deduped chat document
@@ -128,7 +144,9 @@ router.post("/", requireAuth, requireVerified, async (req, res) => {
       });
     }
     console.error("[POST /api/interest Error]:", err);
-    return res.status(500).json({ error: "Internal Server Error", message: err.message });
+    return res
+      .status(500)
+      .json({ error: "Internal Server Error", message: err.message });
   }
 });
 
@@ -137,38 +155,51 @@ router.post("/", requireAuth, requireVerified, async (req, res) => {
  * Check interest status between current user and a candidate user/listing
  * Protected by requireAuth + requireVerified
  */
-router.get("/status/:targetId", requireAuth, requireVerified, async (req, res) => {
-  try {
-    const fromUserId = String(req.user.id);
-    const toUserId = await resolveToUserId(req.params.targetId);
+router.get(
+  "/status/:targetId",
+  requireAuth,
+  requireVerified,
+  async (req, res) => {
+    try {
+      const fromUserId = String(req.user.id);
+      const toUserId = await resolveToUserId(req.params.targetId);
 
-    const directInterest = await MatchInterest.findOne({ fromUserId, toUserId }).lean();
-    const reverseInterest = await MatchInterest.findOne({ fromUserId: toUserId, toUserId: fromUserId }).lean();
+      const directInterest = await MatchInterest.findOne({
+        fromUserId,
+        toUserId,
+      }).lean();
+      const reverseInterest = await MatchInterest.findOne({
+        fromUserId: toUserId,
+        toUserId: fromUserId,
+      }).lean();
 
-    if (directInterest) {
-      return res.status(200).json({
-        status: directInterest.status,
-        isMutualMatch: directInterest.status === "matched",
-        expressedAt: directInterest.createdAt,
-      });
-    }
+      if (directInterest) {
+        return res.status(200).json({
+          status: directInterest.status,
+          isMutualMatch: directInterest.status === "matched",
+          expressedAt: directInterest.createdAt,
+        });
+      }
 
-    if (reverseInterest) {
+      if (reverseInterest) {
+        return res.status(200).json({
+          status: "none",
+          reverseInterestPending: reverseInterest.status === "pending",
+          isMutualMatch: false,
+        });
+      }
+
       return res.status(200).json({
         status: "none",
-        reverseInterestPending: reverseInterest.status === "pending",
         isMutualMatch: false,
       });
+    } catch (err) {
+      return res
+        .status(500)
+        .json({ error: "Internal Server Error", message: err.message });
     }
-
-    return res.status(200).json({
-      status: "none",
-      isMutualMatch: false,
-    });
-  } catch (err) {
-    return res.status(500).json({ error: "Internal Server Error", message: err.message });
-  }
-});
+  },
+);
 
 /**
  * GET /api/interest/my-interests
@@ -188,7 +219,9 @@ router.get("/my-interests", requireAuth, requireVerified, async (req, res) => {
       mutualMatches,
     });
   } catch (err) {
-    return res.status(500).json({ error: "Internal Server Error", message: err.message });
+    return res
+      .status(500)
+      .json({ error: "Internal Server Error", message: err.message });
   }
 });
 

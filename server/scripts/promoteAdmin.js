@@ -17,13 +17,16 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, "../../.env") });
 dotenv.config();
 
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/roomiematch";
+const MONGODB_URI =
+  process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/roomiematch";
 
 async function promoteAdminCLI() {
   const target = process.argv[2];
 
   if (!target) {
-    console.error("Usage: node server/scripts/promoteAdmin.js <userEmailOrUserId>");
+    console.error(
+      "Usage: node server/scripts/promoteAdmin.js <userEmailOrUserId>",
+    );
     process.exit(1);
   }
 
@@ -35,7 +38,9 @@ async function promoteAdminCLI() {
     const db = client.db();
 
     const collections = await db.listCollections().toArray();
-    const collectionName = collections.some((c) => c.name === "user") ? "user" : "users";
+    const collectionName = collections.some((c) => c.name === "user")
+      ? "user"
+      : "users";
 
     const filter = {
       $or: [{ _id: target }, { id: target }, { email: target.toLowerCase() }],
@@ -44,7 +49,9 @@ async function promoteAdminCLI() {
     const userDoc = await db.collection(collectionName).findOne(filter);
 
     if (!userDoc) {
-      console.error(`[promoteAdmin CLI Error] No user found matching '${target}'`);
+      console.error(
+        `[promoteAdmin CLI Error] No user found matching '${target}'`,
+      );
       process.exit(1);
     }
 
@@ -57,10 +64,12 @@ async function promoteAdminCLI() {
 
     if (result.modifiedCount > 0 || userDoc.role === "admin") {
       console.log(
-        `[promoteAdmin CLI Success] User '${userDoc.email}' (ID: ${userDoc.id || userDoc._id}) is now an admin.`
+        `[promoteAdmin CLI Success] User '${userDoc.email}' (ID: ${userDoc.id || userDoc._id}) is now an admin.`,
       );
     } else {
-      console.log(`[promoteAdmin CLI Info] User '${userDoc.email}' already had role: 'admin'.`);
+      console.log(
+        `[promoteAdmin CLI Info] User '${userDoc.email}' already had role: 'admin'.`,
+      );
     }
   } catch (err) {
     console.error("[promoteAdmin CLI Fatal Error]:", err.message);

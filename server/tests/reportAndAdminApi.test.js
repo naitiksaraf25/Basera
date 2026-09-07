@@ -23,20 +23,35 @@ function testSelfReportGuard() {
     const { reportedUserId, reason } = body;
 
     if (!reportedUserId || !reason) {
-      return { status: 400, error: "Bad Request", message: "reportedUserId and reason are required." };
+      return {
+        status: 400,
+        error: "Bad Request",
+        message: "reportedUserId and reason are required.",
+      };
     }
 
     if (reporterId === String(reportedUserId)) {
-      return { status: 400, error: "Bad Request", message: "Users cannot report themselves." };
+      return {
+        status: 400,
+        error: "Bad Request",
+        message: "Users cannot report themselves.",
+      };
     }
 
     return { status: 201, message: "Report submitted successfully." };
   };
 
   const userAlice = { id: "user_alice_123", role: "seeker" };
-  const res = handlePostReport(userAlice, { reportedUserId: "user_alice_123", reason: "Spam" });
+  const res = handlePostReport(userAlice, {
+    reportedUserId: "user_alice_123",
+    reason: "Spam",
+  });
 
-  assert.strictEqual(res.status, 400, "Self-reporting MUST return HTTP 400 Bad Request");
+  assert.strictEqual(
+    res.status,
+    400,
+    "Self-reporting MUST return HTTP 400 Bad Request",
+  );
   assert.strictEqual(res.error, "Bad Request");
   assert.strictEqual(res.message, "Users cannot report themselves.");
 
@@ -46,7 +61,14 @@ function testSelfReportGuard() {
 function testValidReportSubmission() {
   console.log("\n[TEST 2] Testing Valid Report Submission...");
 
-  const validReasons = ["Harassment", "Spam", "Inappropriate Content", "Fake Listing", "Safety Concern", "Other"];
+  const validReasons = [
+    "Harassment",
+    "Spam",
+    "Inappropriate Content",
+    "Fake Listing",
+    "Safety Concern",
+    "Other",
+  ];
   const dbReports = [];
 
   const handlePostReport = (reporterUser, body) => {
@@ -78,22 +100,35 @@ function testValidReportSubmission() {
   const reporter = { id: "user_alice", role: "seeker" };
   const reported = { id: "user_bob", role: "resident" };
 
-  const res = handlePostReport(reporter, { reportedUserId: reported.id, reason: "Harassment", details: "Rude messages" });
+  const res = handlePostReport(reporter, {
+    reportedUserId: reported.id,
+    reason: "Harassment",
+    details: "Rude messages",
+  });
   assert.strictEqual(res.status, 201);
   assert.strictEqual(res.report.reporterId, "user_alice");
   assert.strictEqual(res.report.reportedUserId, "user_bob");
   assert.strictEqual(res.report.status, "pending");
   assert.strictEqual(dbReports.length, 1);
 
-  console.log("✅ PASSED: Valid report recorded in database with pending status.");
+  console.log(
+    "✅ PASSED: Valid report recorded in database with pending status.",
+  );
 }
 
 function testNonAdminRouteProtection() {
-  console.log("\n[TEST 3] Testing Non-Admin Access Rejection (requireAdmin)...");
+  console.log(
+    "\n[TEST 3] Testing Non-Admin Access Rejection (requireAdmin)...",
+  );
 
   const requireAdminMiddleware = (user) => {
     if (!user) return { status: 401, error: "Unauthorized" };
-    if (user.role !== "admin") return { status: 403, error: "Forbidden", message: "Admin access required." };
+    if (user.role !== "admin")
+      return {
+        status: 403,
+        error: "Forbidden",
+        message: "Admin access required.",
+      };
     return { status: 200 };
   };
 
@@ -102,15 +137,25 @@ function testNonAdminRouteProtection() {
   const adminUser = { id: "u_admin", role: "admin" };
 
   const seekerRes = requireAdminMiddleware(seekerUser);
-  assert.strictEqual(seekerRes.status, 403, "Seeker MUST be rejected with HTTP 403 Forbidden");
+  assert.strictEqual(
+    seekerRes.status,
+    403,
+    "Seeker MUST be rejected with HTTP 403 Forbidden",
+  );
 
   const landlordRes = requireAdminMiddleware(landlordUser);
-  assert.strictEqual(landlordRes.status, 403, "Landlord MUST be rejected with HTTP 403 Forbidden");
+  assert.strictEqual(
+    landlordRes.status,
+    403,
+    "Landlord MUST be rejected with HTTP 403 Forbidden",
+  );
 
   const adminRes = requireAdminMiddleware(adminUser);
   assert.strictEqual(adminRes.status, 200, "Admin MUST be granted access");
 
-  console.log("✅ PASSED: requireAdmin middleware strictly enforces role === 'admin'.");
+  console.log(
+    "✅ PASSED: requireAdmin middleware strictly enforces role === 'admin'.",
+  );
 }
 
 function testAdminPromotionGuard() {
@@ -123,7 +168,11 @@ function testAdminPromotionGuard() {
 
   const handleAdminPromote = (callingUser, body) => {
     if (callingUser.role !== "admin") {
-      return { status: 403, error: "Forbidden", message: "Admin access required." };
+      return {
+        status: 403,
+        error: "Forbidden",
+        message: "Admin access required.",
+      };
     }
 
     const { userId } = body;
@@ -131,26 +180,48 @@ function testAdminPromotionGuard() {
     if (!target) return { status: 404, message: "Target user not found." };
 
     target.role = "admin";
-    return { status: 200, message: `User '${target.email}' successfully promoted to admin.`, user: target };
+    return {
+      status: 200,
+      message: `User '${target.email}' successfully promoted to admin.`,
+      user: target,
+    };
   };
 
   const seekerCalling = { id: "u_target_user", role: "seeker" };
-  const seekerAttempt = handleAdminPromote(seekerCalling, { userId: "u_target_user" });
-  assert.strictEqual(seekerAttempt.status, 403, "Non-admin cannot promote anyone");
+  const seekerAttempt = handleAdminPromote(seekerCalling, {
+    userId: "u_target_user",
+  });
+  assert.strictEqual(
+    seekerAttempt.status,
+    403,
+    "Non-admin cannot promote anyone",
+  );
 
   const adminCalling = { id: "u_existing_admin", role: "admin" };
-  const adminAttempt = handleAdminPromote(adminCalling, { userId: "u_target_user" });
+  const adminAttempt = handleAdminPromote(adminCalling, {
+    userId: "u_target_user",
+  });
   assert.strictEqual(adminAttempt.status, 200);
   assert.strictEqual(adminAttempt.user.role, "admin");
 
-  console.log("✅ PASSED: POST /api/admin/promote is strictly reachable only by an existing admin.");
+  console.log(
+    "✅ PASSED: POST /api/admin/promote is strictly reachable only by an existing admin.",
+  );
 }
 
 function testReportActionModeration() {
   console.log("\n[TEST 5] Testing Report Action Moderation (suspend/ban)...");
 
-  const usersDb = [{ id: "bad_user_99", role: "seeker", accountStatus: "active" }];
-  const report = { id: "rep_101", reporterId: "user_a", reportedUserId: "bad_user_99", status: "pending", actionTaken: "none" };
+  const usersDb = [
+    { id: "bad_user_99", role: "seeker", accountStatus: "active" },
+  ];
+  const report = {
+    id: "rep_101",
+    reporterId: "user_a",
+    reportedUserId: "bad_user_99",
+    status: "pending",
+    actionTaken: "none",
+  };
 
   const applyReportAction = (callingAdmin, reportId, action) => {
     if (callingAdmin.role !== "admin") return { status: 403 };
@@ -159,12 +230,20 @@ function testReportActionModeration() {
     if (!validActions.includes(action)) return { status: 400 };
 
     report.status = action === "dismiss" ? "dismissed" : "actioned";
-    report.actionTaken = action === "dismiss" ? "none" : action === "warn" ? "warned" : action === "suspend" ? "suspended" : "banned";
+    report.actionTaken =
+      action === "dismiss"
+        ? "none"
+        : action === "warn"
+          ? "warned"
+          : action === "suspend"
+            ? "suspended"
+            : "banned";
 
     if (action === "suspend" || action === "ban") {
       const targetUser = usersDb.find((u) => u.id === report.reportedUserId);
       if (targetUser) {
-        targetUser.accountStatus = action === "suspend" ? "suspended" : "banned";
+        targetUser.accountStatus =
+          action === "suspend" ? "suspended" : "banned";
       }
     }
     return { status: 200, report };
@@ -177,16 +256,24 @@ function testReportActionModeration() {
   assert.strictEqual(report.actionTaken, "suspended");
   assert.strictEqual(usersDb[0].accountStatus, "suspended");
 
-  console.log("✅ PASSED: Moderation action 'suspend' updates report and sets user accountStatus to suspended.");
+  console.log(
+    "✅ PASSED: Moderation action 'suspend' updates report and sets user accountStatus to suspended.",
+  );
 }
 
 function testLandlordVerificationApproval() {
-  console.log("\n[TEST 6] Testing Admin Landlord & College Verification Approval...");
+  console.log(
+    "\n[TEST 6] Testing Admin Landlord & College Verification Approval...",
+  );
 
   const targetUser = {
     id: "landlord_42",
     role: "landlord",
-    platformVerification: { status: "pending", method: "government_id", idDocumentUrl: "/uploads/id.pdf" },
+    platformVerification: {
+      status: "pending",
+      method: "government_id",
+      idDocumentUrl: "/uploads/id.pdf",
+    },
   };
 
   const handleVerificationAction = (callingAdmin, userId, action) => {
@@ -207,11 +294,15 @@ function testLandlordVerificationApproval() {
   assert.strictEqual(res.status, 200);
   assert.strictEqual(targetUser.platformVerification.status, "verified");
 
-  console.log("✅ PASSED: Admin verification approval successfully sets platformVerification.status to 'verified'.");
+  console.log(
+    "✅ PASSED: Admin verification approval successfully sets platformVerification.status to 'verified'.",
+  );
 }
 
 function testChatAndMatchReportPayloadWiring() {
-  console.log("\n[TEST 7] Testing ChatView & MatchResultsView reportedUserId Prop Extraction...");
+  console.log(
+    "\n[TEST 7] Testing ChatView & MatchResultsView reportedUserId Prop Extraction...",
+  );
 
   // 1. ChatView data shape (GET /api/chat/:chatId/messages returns otherParticipant with userId/candidateId)
   const chatOtherParticipant = {
@@ -231,7 +322,7 @@ function testChatAndMatchReportPayloadWiring() {
   assert.strictEqual(
     extractedFromChat,
     "usr_partner_777",
-    "ChatView MUST correctly extract userId from otherParticipant"
+    "ChatView MUST correctly extract userId from otherParticipant",
   );
 
   // 2. MatchResultsView data shape (matching engine result with candidateId & snapshot)
@@ -251,19 +342,28 @@ function testChatAndMatchReportPayloadWiring() {
   assert.strictEqual(
     extractedFromMatch,
     "usr_match_888",
-    "MatchResultsView MUST correctly extract candidateId from match candidate"
+    "MatchResultsView MUST correctly extract candidateId from match candidate",
   );
 
-  console.log("✅ PASSED: ChatView & MatchResultsView reportedUserId prop extraction verified.");
+  console.log(
+    "✅ PASSED: ChatView & MatchResultsView reportedUserId prop extraction verified.",
+  );
 }
 
 function testUserWarningLifecycleAndAcknowledgment() {
-  console.log("\n[TEST 8] Testing Moderation Warning Creation, Delivery & Acknowledgment...");
+  console.log(
+    "\n[TEST 8] Testing Moderation Warning Creation, Delivery & Acknowledgment...",
+  );
 
-  const usersDb = [
-    { id: "warned_user_1", role: "seeker", warnings: [] },
-  ];
-  const report = { id: "rep_202", reporterId: "user_a", reportedUserId: "warned_user_1", reason: "Inappropriate Content", status: "pending", actionTaken: "none" };
+  const usersDb = [{ id: "warned_user_1", role: "seeker", warnings: [] }];
+  const report = {
+    id: "rep_202",
+    reporterId: "user_a",
+    reportedUserId: "warned_user_1",
+    reason: "Inappropriate Content",
+    status: "pending",
+    actionTaken: "none",
+  };
 
   // Admin issues warn action
   const applyWarnAction = (callingAdmin, reportId) => {
@@ -296,9 +396,16 @@ function testUserWarningLifecycleAndAcknowledgment() {
   // User acknowledges warning via POST /api/user/acknowledge-warning
   const handleAcknowledgeWarning = (callingUser, warningId) => {
     // Scoped strictly to callingUser.id
-    const targetUser = usersDb.find((u) => u.id === callingUser.id && u.warnings.some((w) => w.id === warningId));
+    const targetUser = usersDb.find(
+      (u) =>
+        u.id === callingUser.id && u.warnings.some((w) => w.id === warningId),
+    );
     if (!targetUser) {
-      return { status: 404, error: "Not Found", message: "Warning not found or does not belong to current user." };
+      return {
+        status: 404,
+        error: "Not Found",
+        message: "Warning not found or does not belong to current user.",
+      };
     }
 
     const warning = targetUser.warnings.find((w) => w.id === warningId);
@@ -308,29 +415,50 @@ function testUserWarningLifecycleAndAcknowledgment() {
     return { status: 200, user: targetUser };
   };
 
-  const userRes = handleAcknowledgeWarning({ id: "warned_user_1" }, "warn_spec_101");
+  const userRes = handleAcknowledgeWarning(
+    { id: "warned_user_1" },
+    "warn_spec_101",
+  );
   assert.strictEqual(userRes.status, 200);
   assert.strictEqual(usersDb[0].warnings[0].acknowledged, true);
   assert.strictEqual(typeof usersDb[0].warnings[0].acknowledgedAt, "string");
-  assert.strictEqual(report.actionTaken, "warned", "DB audit record of report MUST remain intact");
+  assert.strictEqual(
+    report.actionTaken,
+    "warned",
+    "DB audit record of report MUST remain intact",
+  );
 
-  console.log("✅ PASSED: Moderation warning recorded, delivered to user, and acknowledged while preserving audit trail.");
+  console.log(
+    "✅ PASSED: Moderation warning recorded, delivered to user, and acknowledged while preserving audit trail.",
+  );
 }
 
 function testCrossUserWarningAcknowledgmentPrevention() {
-  console.log("\n[TEST 9] Testing Cross-User Warning Acknowledgment Prevention (Scoped Query)...");
+  console.log(
+    "\n[TEST 9] Testing Cross-User Warning Acknowledgment Prevention (Scoped Query)...",
+  );
 
   const usersDb = [
-    { id: "victim_user_a", warnings: [{ id: "warn_private_a", acknowledged: false }] },
+    {
+      id: "victim_user_a",
+      warnings: [{ id: "warn_private_a", acknowledged: false }],
+    },
     { id: "attacker_user_b", warnings: [] },
   ];
 
   const handleAcknowledgeWarning = (callingUser, warningId) => {
     // Query filter MUST match callingUser.id AND warnings.id inside their own warnings array
-    const userDoc = usersDb.find((u) => u.id === callingUser.id && u.warnings.some((w) => w.id === warningId));
+    const userDoc = usersDb.find(
+      (u) =>
+        u.id === callingUser.id && u.warnings.some((w) => w.id === warningId),
+    );
 
     if (!userDoc) {
-      return { status: 404, error: "Not Found", message: "Warning not found or does not belong to current user." };
+      return {
+        status: 404,
+        error: "Not Found",
+        message: "Warning not found or does not belong to current user.",
+      };
     }
 
     const warning = userDoc.warnings.find((w) => w.id === warningId);
@@ -339,11 +467,24 @@ function testCrossUserWarningAcknowledgmentPrevention() {
   };
 
   // Attacker User B attempts to acknowledge User A's warning ID
-  const attackerAttempt = handleAcknowledgeWarning({ id: "attacker_user_b" }, "warn_private_a");
-  assert.strictEqual(attackerAttempt.status, 404, "Cross-user acknowledgment attempt MUST return HTTP 404 Not Found");
-  assert.strictEqual(usersDb[0].warnings[0].acknowledged, false, "Victim user's warning MUST remain unacknowledged");
+  const attackerAttempt = handleAcknowledgeWarning(
+    { id: "attacker_user_b" },
+    "warn_private_a",
+  );
+  assert.strictEqual(
+    attackerAttempt.status,
+    404,
+    "Cross-user acknowledgment attempt MUST return HTTP 404 Not Found",
+  );
+  assert.strictEqual(
+    usersDb[0].warnings[0].acknowledged,
+    false,
+    "Victim user's warning MUST remain unacknowledged",
+  );
 
-  console.log("✅ PASSED: Acknowledgment query strictly scoped to req.user.id (cross-user tampering prevented).");
+  console.log(
+    "✅ PASSED: Acknowledgment query strictly scoped to req.user.id (cross-user tampering prevented).",
+  );
 }
 
 function runAll() {
@@ -363,5 +504,3 @@ function runAll() {
 }
 
 runAll();
-
-

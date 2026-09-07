@@ -11,7 +11,8 @@ dotenv.config({ path: path.join(__dirname, "../../.env") });
 dotenv.config();
 
 const router = express.Router();
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/roomiematch";
+const MONGODB_URI =
+  process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/roomiematch";
 
 /**
  * POST /api/user/acknowledge-warning
@@ -37,7 +38,9 @@ router.post("/acknowledge-warning", requireAuth, async (req, res) => {
     const db = client.db();
 
     const collections = await db.listCollections().toArray();
-    const collectionName = collections.some((c) => c.name === "user") ? "user" : "users";
+    const collectionName = collections.some((c) => c.name === "user")
+      ? "user"
+      : "users";
 
     const filterConditions = [{ _id: currentUserId }, { id: currentUserId }];
     if (ObjectId.isValid(currentUserId)) {
@@ -46,10 +49,7 @@ router.post("/acknowledge-warning", requireAuth, async (req, res) => {
 
     // Strictly scope query filter to current authenticated user's ID AND matching warningId
     const userFilter = {
-      $and: [
-        { $or: filterConditions },
-        { "warnings.id": warningId },
-      ],
+      $and: [{ $or: filterConditions }, { "warnings.id": warningId }],
     };
 
     const userDoc = await db.collection(collectionName).findOne(userFilter);
@@ -76,7 +76,7 @@ router.post("/acknowledge-warning", requireAuth, async (req, res) => {
           "warnings.$.acknowledgedAt": acknowledgedAt,
           updatedAt: acknowledgedAt,
         },
-      }
+      },
     );
 
     const updatedUser = await db.collection(collectionName).findOne({
