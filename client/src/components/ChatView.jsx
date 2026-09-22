@@ -227,61 +227,62 @@ export function ChatView({ user, initialChatId = null, onBackToMatching }) {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: chatList.length > 0 ? "260px 1fr" : "1fr",
-          gap: "1rem",
-          minHeight: "520px",
+          gridTemplateColumns: chatList.length > 0 ? "280px 1fr" : "1fr",
+          gap: "1.25rem",
+          minHeight: "560px",
         }}
       >
         {/* Chat List Sidebar */}
         <div
           className="card"
           style={{
-            padding: "0.75rem",
+            padding: "1rem",
             display: "flex",
             flexDirection: "column",
             gap: "0.5rem",
-            backgroundColor: "#0f172a",
-            borderRight: "1px solid #334155",
-            borderRadius: "12px",
+            borderRadius: "18px",
           }}
         >
           <div
             style={{
-              fontWeight: "bold",
-              color: "#94a3b8",
-              fontSize: "0.85rem",
+              fontWeight: 700,
+              color: "var(--text-muted)",
+              fontSize: "0.78rem",
+              letterSpacing: "0.05em",
+              textTransform: "uppercase",
               marginBottom: "0.4rem",
+              paddingLeft: "0.25rem",
             }}
           >
-            CONVERSATIONS ({chatList.length})
+            Conversations ({chatList.length})
           </div>
 
           {loadingList ? (
             <div
               style={{
-                color: "#94a3b8",
+                color: "var(--text-muted)",
                 fontSize: "0.85rem",
-                padding: "1rem 0",
+                padding: "2rem 0",
+                textAlign: "center",
               }}
             >
-              Loading matched chats...
+              ⏳ Loading matched chats...
             </div>
           ) : chatList.length === 0 ? (
             <div
               style={{
-                color: "#94a3b8",
+                color: "var(--text-muted)",
                 fontSize: "0.85rem",
-                padding: "1.5rem 0.5rem",
+                padding: "2.5rem 1rem",
                 textAlign: "center",
               }}
             >
-              <p style={{ margin: 0, fontSize: "1.5rem" }}>💬</p>
-              <p style={{ margin: "0.5rem 0", fontWeight: "600" }}>
+              <p style={{ margin: 0, fontSize: "2rem" }}>💬</p>
+              <p style={{ margin: "0.5rem 0", fontWeight: 700, color: "var(--text-primary)" }}>
                 No active chats yet
               </p>
-              <p style={{ fontSize: "0.75rem", color: "#64748b", margin: 0 }}>
-                When you and another candidate express mutual interest, your
-                private chat will unlock here automatically!
+              <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: 0, lineHeight: 1.5 }}>
+                When you and another student or landlord express mutual interest, your private conversation unlocks here!
               </p>
             </div>
           ) : (
@@ -303,14 +304,12 @@ export function ChatView({ user, initialChatId = null, onBackToMatching }) {
                     key={chat._id}
                     onClick={() => setActiveChatId(chat._id)}
                     style={{
-                      padding: "0.65rem 0.85rem",
-                      borderRadius: "8px",
+                      padding: "0.75rem 0.9rem",
+                      borderRadius: "14px",
                       cursor: "pointer",
-                      backgroundColor: isSelected ? "#1e293b" : "transparent",
-                      border: isSelected
-                        ? "1px solid #38bdf8"
-                        : "1px solid transparent",
-                      transition: "all 0.15s ease",
+                      background: isSelected ? "var(--accent-primary-subtle)" : "var(--bg-surface-subtle)",
+                      border: isSelected ? "1.5px solid var(--accent-primary)" : "1px solid var(--border-subtle)",
+                      transition: "all 0.18s ease",
                     }}
                   >
                     <div
@@ -322,9 +321,9 @@ export function ChatView({ user, initialChatId = null, onBackToMatching }) {
                     >
                       <span
                         style={{
-                          fontWeight: "bold",
-                          fontSize: "0.9rem",
-                          color: isSelected ? "#38bdf8" : "#f8fafc",
+                          fontWeight: 700,
+                          fontSize: "0.92rem",
+                          color: isSelected ? "var(--accent-primary)" : "var(--text-primary)",
                         }}
                       >
                         {candidate.name || "Matched User"}
@@ -342,21 +341,20 @@ export function ChatView({ user, initialChatId = null, onBackToMatching }) {
                     <div
                       style={{
                         fontSize: "0.75rem",
-                        color: "#a5b4fc",
+                        color: "var(--text-muted)",
                         marginTop: "2px",
                         textTransform: "capitalize",
                       }}
                     >
-                      {candidate.role || "User"} •{" "}
-                      {candidate.city || "Launch City"}
+                      {candidate.role || "Student"} • {candidate.city || "Launch City"}
                     </div>
 
                     {lastMsg && (
                       <div
                         style={{
-                          fontSize: "0.75rem",
-                          color: "#94a3b8",
-                          marginTop: "4px",
+                          fontSize: "0.78rem",
+                          color: "var(--text-secondary)",
+                          marginTop: "5px",
                           whiteSpace: "nowrap",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
@@ -379,11 +377,10 @@ export function ChatView({ user, initialChatId = null, onBackToMatching }) {
           style={{
             display: "flex",
             flexDirection: "column",
-            justify: "space-between",
+            justifyContent: "space-between",
             padding: 0,
-            borderRadius: "12px",
+            borderRadius: "18px",
             overflow: "hidden",
-            backgroundColor: "#0f172a",
           }}
         >
           {activeChatId && otherParticipant ? (
@@ -391,11 +388,11 @@ export function ChatView({ user, initialChatId = null, onBackToMatching }) {
               {/* Thread Top Bar */}
               <div
                 style={{
-                  padding: "0.85rem 1.25rem",
-                  backgroundColor: "#1e293b",
-                  borderBottom: "1px solid #334155",
+                  padding: "0.9rem 1.25rem",
+                  background: "var(--bg-surface-subtle)",
+                  borderBottom: "1px solid var(--border-subtle)",
                   display: "flex",
-                  justify: "space-between",
+                  justifyContent: "space-between",
                   alignItems: "center",
                 }}
               >
@@ -403,7 +400,7 @@ export function ChatView({ user, initialChatId = null, onBackToMatching }) {
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: "0.75rem",
+                    gap: "0.85rem",
                   }}
                 >
                   {otherParticipant.photoUrl ? (
@@ -411,27 +408,29 @@ export function ChatView({ user, initialChatId = null, onBackToMatching }) {
                       src={otherParticipant.photoUrl}
                       alt={otherParticipant.name}
                       style={{
-                        width: "40px",
-                        height: "40px",
-                        borderRadius: "50%",
+                        width: "42px",
+                        height: "42px",
+                        borderRadius: "12px",
                         objectFit: "cover",
+                        border: "1.5px solid var(--accent-primary)",
                       }}
                     />
                   ) : (
                     <div
                       style={{
-                        width: "40px",
-                        height: "40px",
-                        borderRadius: "50%",
-                        background: "#3b82f6",
+                        width: "42px",
+                        height: "42px",
+                        borderRadius: "12px",
+                        background: "linear-gradient(135deg, var(--accent-primary), var(--accent-warm))",
                         display: "flex",
                         alignItems: "center",
-                        justify: "center",
-                        fontWeight: "bold",
+                        justifyContent: "center",
+                        fontWeight: 700,
                         color: "#fff",
+                        fontSize: "1.1rem",
                       }}
                     >
-                      {(otherParticipant.name || "RM").charAt(0).toUpperCase()}
+                      {(otherParticipant.name || "B").charAt(0).toUpperCase()}
                     </div>
                   )}
 
@@ -439,24 +438,21 @@ export function ChatView({ user, initialChatId = null, onBackToMatching }) {
                     <h4
                       style={{
                         margin: 0,
-                        color: "#f8fafc",
+                        color: "var(--text-primary)",
                         fontSize: "1.05rem",
+                        fontWeight: 700,
                       }}
                     >
                       {otherParticipant.name || "Matched Candidate"}
                     </h4>
                     <span
                       style={{
-                        fontSize: "0.75rem",
-                        color: "#38bdf8",
+                        fontSize: "0.78rem",
+                        color: "var(--text-muted)",
                         textTransform: "capitalize",
                       }}
                     >
-                      {otherParticipant.role} • 📍{" "}
-                      {otherParticipant.locality
-                        ? `${otherParticipant.locality}, `
-                        : ""}
-                      {otherParticipant.city || "Launch City"}
+                      {otherParticipant.role} • 📍 {otherParticipant.locality ? `${otherParticipant.locality}, ` : ""}{otherParticipant.city || "Launch City"}
                     </span>
                   </div>
                 </div>
@@ -465,29 +461,22 @@ export function ChatView({ user, initialChatId = null, onBackToMatching }) {
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: "0.75rem",
+                    gap: "0.6rem",
                   }}
                 >
-                  <span
-                    style={{
-                      fontSize: "0.75rem",
-                      color: "#22c55e",
-                      fontWeight: "600",
-                    }}
-                  >
-                    ● Matched & Active
+                  <span className="badge badge-success" style={{ fontSize: "0.75rem" }}>
+                    ✓ Matched
                   </span>
                   <button
                     onClick={() => setShowReportModal(true)}
+                    className="pill-btn-ghost"
                     style={{
-                      background: "#ef444420",
-                      border: "1px solid #ef4444",
                       color: "#ef4444",
                       fontSize: "0.75rem",
-                      padding: "0.3rem 0.6rem",
+                      padding: "0.3rem 0.65rem",
                     }}
                   >
-                    🚨 Report User
+                    🚨 Report
                   </button>
                 </div>
               </div>
@@ -495,52 +484,52 @@ export function ChatView({ user, initialChatId = null, onBackToMatching }) {
               {/* Privacy Notice Banner */}
               <div
                 style={{
-                  backgroundColor: "#0284c715",
-                  borderBottom: "1px solid #0284c730",
-                  padding: "0.4rem 1rem",
+                  background: "var(--accent-primary-subtle)",
+                  borderBottom: "1px solid var(--border-subtle)",
+                  padding: "0.45rem 1rem",
                   fontSize: "0.75rem",
-                  color: "#38bdf8",
+                  color: "var(--accent-primary)",
                   textAlign: "center",
+                  fontWeight: 500,
                 }}
               >
-                🔒 Contact info is never auto-shared. You can voluntarily share
-                contact details inside messages if you choose.
+                🔒 Contact information is protected. Feel free to exchange phone/socials voluntarily when ready.
               </div>
 
               {/* Messages Container */}
               <div
                 style={{
                   flex: 1,
-                  padding: "1rem",
+                  padding: "1.25rem",
                   overflowY: "auto",
-                  maxHeight: "360px",
+                  maxHeight: "380px",
                   display: "flex",
                   flexDirection: "column",
-                  gap: "0.75rem",
+                  gap: "0.85rem",
                 }}
               >
                 {loadingMessages ? (
                   <div
                     style={{
-                      color: "#94a3b8",
+                      color: "var(--text-muted)",
                       fontSize: "0.85rem",
                       textAlign: "center",
                       margin: "auto",
                     }}
                   >
-                    Loading message history...
+                    ⏳ Loading messages...
                   </div>
                 ) : messages.length === 0 ? (
                   <div
                     style={{
-                      color: "#94a3b8",
-                      fontSize: "0.85rem",
+                      color: "var(--text-muted)",
+                      fontSize: "0.9rem",
                       textAlign: "center",
                       margin: "auto",
+                      padding: "2rem 0",
                     }}
                   >
-                    👋 Say hi to {otherParticipant.name}! Start the conversation
-                    below.
+                    👋 Say hello to <strong>{otherParticipant.name}</strong>! Ask about room visits or living habits.
                   </div>
                 ) : (
                   messages.map((msg) => {
@@ -557,16 +546,19 @@ export function ChatView({ user, initialChatId = null, onBackToMatching }) {
                         <div
                           style={{
                             maxWidth: "75%",
-                            padding: "0.65rem 0.95rem",
+                            padding: "0.7rem 1.05rem",
                             borderRadius: isMe
-                              ? "14px 14px 2px 14px"
-                              : "14px 14px 14px 2px",
-                            backgroundColor: isMe ? "#2563eb" : "#1e293b",
-                            color: "#f8fafc",
-                            fontSize: "0.9rem",
-                            lineHeight: "1.4",
+                              ? "18px 18px 4px 18px"
+                              : "18px 18px 18px 4px",
+                            background: isMe
+                              ? "linear-gradient(135deg, var(--accent-primary), #1d4ed8)"
+                              : "var(--bg-surface-subtle)",
+                            color: isMe ? "#ffffff" : "var(--text-primary)",
+                            border: isMe ? "none" : "1px solid var(--border-subtle)",
+                            fontSize: "0.92rem",
+                            lineHeight: "1.45",
                             wordBreak: "break-word",
-                            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                            boxShadow: "var(--shadow-sm)",
                           }}
                         >
                           {msg.text}
@@ -574,7 +566,7 @@ export function ChatView({ user, initialChatId = null, onBackToMatching }) {
                         <div
                           style={{
                             fontSize: "0.7rem",
-                            color: "#64748b",
+                            color: "var(--text-muted)",
                             marginTop: "3px",
                             padding: "0 4px",
                           }}
@@ -593,40 +585,40 @@ export function ChatView({ user, initialChatId = null, onBackToMatching }) {
               <form
                 onSubmit={handleSendMessage}
                 style={{
-                  padding: "0.75rem 1rem",
-                  backgroundColor: "#1e293b",
-                  borderTop: "1px solid #334155",
+                  padding: "0.85rem 1.25rem",
+                  background: "var(--bg-surface-subtle)",
+                  borderTop: "1px solid var(--border-subtle)",
                   display: "flex",
                   flexDirection: "column",
                   gap: "0.4rem",
                 }}
               >
-                <div style={{ display: "flex", gap: "0.5rem" }}>
+                <div style={{ display: "flex", gap: "0.6rem" }}>
                   <input
                     type="text"
-                    placeholder="Type your message..."
+                    placeholder="Type a friendly message..."
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
                     maxLength={2000}
                     disabled={sendingMessage}
                     style={{
                       flex: 1,
-                      padding: "0.6rem 0.85rem",
-                      borderRadius: "8px",
-                      border: "1px solid #334155",
-                      backgroundColor: "#0f172a",
-                      color: "#f8fafc",
-                      fontSize: "0.9rem",
+                      padding: "0.7rem 1rem",
+                      borderRadius: "9999px",
+                      border: "1px solid var(--border-subtle)",
+                      background: "var(--bg-surface)",
+                      color: "var(--text-primary)",
+                      fontSize: "0.92rem",
                     }}
                   />
                   <button
                     type="submit"
                     disabled={sendingMessage || !inputText.trim()}
+                    className="pill-btn-primary"
                     style={{
-                      padding: "0.6rem 1.25rem",
-                      backgroundColor: "#2563eb",
-                      fontWeight: "bold",
-                      borderRadius: "8px",
+                      padding: "0.6rem 1.4rem",
+                      fontSize: "0.9rem",
+                      fontWeight: 700,
                     }}
                   >
                     {sendingMessage ? "Sending..." : "Send 📤"}
@@ -636,10 +628,10 @@ export function ChatView({ user, initialChatId = null, onBackToMatching }) {
                 <div
                   style={{
                     display: "flex",
-                    justify: "space-between",
+                    justifyContent: "space-between",
                     fontSize: "0.7rem",
-                    color: inputText.length > 1800 ? "#f59e0b" : "#64748b",
-                    padding: "0 2px",
+                    color: "var(--text-muted)",
+                    padding: "0 4px",
                   }}
                 >
                   <span>Press Enter to send</span>
@@ -650,29 +642,31 @@ export function ChatView({ user, initialChatId = null, onBackToMatching }) {
           ) : (
             <div
               style={{
+                height: "100%",
+                padding: "3rem 1.5rem",
+                color: "var(--text-muted)",
+                textAlign: "center",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                height: "100%",
-                padding: "2rem",
-                color: "#94a3b8",
-                textAlign: "center",
               }}
             >
               <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>
                 💬
               </div>
-              <h4>Select a Matched Conversation</h4>
+              <h4 style={{ margin: 0, color: "var(--text-primary)", fontSize: "1.1rem" }}>
+                Select a Matched Conversation
+              </h4>
               <p
                 style={{
                   fontSize: "0.85rem",
-                  maxWidth: "320px",
-                  color: "#64748b",
+                  maxWidth: "340px",
+                  color: "var(--text-muted)",
+                  marginTop: "0.4rem",
                 }}
               >
-                Choose a matched chat from the left panel to view messages or
-                start chatting.
+                Choose a matched flatmate from the left panel to view messages or start chatting.
               </p>
             </div>
           )}

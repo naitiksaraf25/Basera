@@ -18,7 +18,7 @@ dotenv.config({ path: path.join(__dirname, "../../.env") });
 dotenv.config();
 
 const MONGODB_URI =
-  process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/roomiematch";
+  process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/basera";
 
 async function promoteAdminCLI() {
   const target = process.argv[2];

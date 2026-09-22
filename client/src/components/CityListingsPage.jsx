@@ -1,8 +1,16 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { CITY_CATALOG } from "../data/cityData";
+import { CITY_CATALOG, getPropertyCategory } from "../data/cityData";
+import { Navbar } from "./Navbar";
 
-export function CityListingsPage({ onOpenAuth, theme, toggleTheme }) {
+export function CityListingsPage({
+  user,
+  onOpenAuth,
+  theme,
+  toggleTheme,
+  onSignOut,
+  onNavigateToView,
+}) {
   const { citySlug } = useParams();
   const navigate = useNavigate();
 
@@ -10,7 +18,7 @@ export function CityListingsPage({ onOpenAuth, theme, toggleTheme }) {
   const [selectedArea, setSelectedArea] = useState("All");
   const [maxBudget, setMaxBudget] = useState(16000);
   const [roomTypeFilter, setRoomTypeFilter] = useState("All");
-  const [scrolled, setScrolled] = useState(false);
+  const [propertyTypeFilter, setPropertyTypeFilter] = useState("all"); // 'all' | 'PG' | 'Flat'
 
   // Lookup city data from catalog
   const cityData = CITY_CATALOG[citySlug] || CITY_CATALOG["bengaluru"];
@@ -18,25 +26,25 @@ export function CityListingsPage({ onOpenAuth, theme, toggleTheme }) {
   useEffect(() => {
     // Reset area filter when city changes
     setSelectedArea("All");
-    window.scrollTo({ top: 0, behavior: "smooth" });
   }, [citySlug]);
 
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  // Filter listings by area, budget, room type
+  // Filter listings by area, budget, room type, and PG vs Flat
   const filteredListings = cityData.listings.filter((listing) => {
+    const loc = listing.locality.toLowerCase();
+    const area = selectedArea.toLowerCase();
     const matchesArea =
       selectedArea === "All" ||
-      listing.locality.toLowerCase().includes(selectedArea.toLowerCase());
+      loc.includes(area) ||
+      area.split(/[\/&]/).map((p) => p.trim()).some((p) => p && loc.includes(p)) ||
+      selectedArea.replace(/it corridor|perimeter|sector v/gi, "").trim().split(/[\s,]+/).some((w) => w && w.length >= 3 && loc.includes(w.toLowerCase()));
     const matchesBudget = listing.price <= maxBudget;
     const matchesType =
       roomTypeFilter === "All" ||
       listing.roomType.toLowerCase().includes(roomTypeFilter.toLowerCase());
-    return matchesArea && matchesBudget && matchesType;
+    const matchesPropertyType =
+      propertyTypeFilter === "all" ||
+      getPropertyCategory(listing.roomType) === propertyTypeFilter;
+    return matchesArea && matchesBudget && matchesType && matchesPropertyType;
   });
 
   return (
@@ -54,146 +62,15 @@ export function CityListingsPage({ onOpenAuth, theme, toggleTheme }) {
         style={{ position: "fixed", top: 0, left: 0, zIndex: 100 }}
       />
 
-      {/* 1. STICKY NAVBAR */}
-      <header
-        style={{
-          position: "sticky",
-          top: 0,
-          zIndex: 50,
-          backdropFilter: "blur(16px)",
-          WebkitBackdropFilter: "blur(16px)",
-          background: scrolled
-            ? "var(--nav-glass-bg)"
-            : "rgba(255, 255, 255, 0.95)",
-          borderBottom: "1px solid var(--nav-border)",
-          transition: "all 0.25s ease",
-        }}
-      >
-        <div
-          style={{
-            maxWidth: "1240px",
-            margin: "0 auto",
-            padding: "0.85rem 1.5rem",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          {/* Logo */}
-          <Link
-            to="/"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "0.6rem",
-              textDecoration: "none",
-              color: "var(--text-primary)",
-            }}
-          >
-            <div
-              style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "9999px",
-                background: "var(--gradient-horizon)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 2px 8px rgba(15, 82, 224, 0.15)",
-                border: "1px solid var(--border-subtle)",
-              }}
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="var(--accent-primary)"
-                strokeWidth="2.2"
-              >
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                <polyline points="9 22 9 12 15 12 15 22" />
-              </svg>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                textAlign: "left",
-              }}
-            >
-              <span
-                style={{
-                  fontSize: "1.3rem",
-                  fontWeight: 700,
-                  letterSpacing: "-0.03em",
-                  lineHeight: 1,
-                }}
-              >
-                Basera
-              </span>
-              <span
-                style={{
-                  fontSize: "0.68rem",
-                  color: "var(--text-muted)",
-                  letterSpacing: "0.04em",
-                  textTransform: "uppercase",
-                  fontWeight: 600,
-                }}
-              >
-                Student Living
-              </span>
-            </div>
-          </Link>
-
-          {/* Nav Links */}
-          <div style={{ display: "flex", alignItems: "center", gap: "1.2rem" }}>
-            <Link
-              to="/"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "0.4rem",
-                textDecoration: "none",
-                fontSize: "0.88rem",
-                fontWeight: 600,
-                color: "var(--text-secondary)",
-              }}
-            >
-              ← Back to All Cities
-            </Link>
-
-            {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="pill-btn-ghost"
-              title="Toggle theme"
-              style={{
-                width: "38px",
-                height: "38px",
-                padding: 0,
-                borderRadius: "9999px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: "var(--bg-surface-subtle)",
-                border: "1px solid var(--border-subtle)",
-              }}
-            >
-              {theme === "dark" ? "☀️" : "🌙"}
-            </button>
-
-            {/* Auth CTA */}
-            <button
-              onClick={() => onOpenAuth("signup")}
-              className="pill-btn-primary"
-              style={{ fontSize: "0.88rem", padding: "0.55rem 1.25rem" }}
-            >
-              Get Started
-            </button>
-          </div>
-        </div>
-      </header>
+      {/* 1. SHARED NAVBAR */}
+      <Navbar
+        user={user}
+        onOpenAuth={onOpenAuth}
+        theme={theme}
+        toggleTheme={toggleTheme}
+        onSignOut={onSignOut}
+        onNavigateToView={onNavigateToView}
+      />
 
       {/* 2. DEDICATED CITY HERO BANNER */}
       <section
@@ -727,26 +604,60 @@ export function CityListingsPage({ onOpenAuth, theme, toggleTheme }) {
             boxShadow: "var(--shadow-sm)",
           }}
         >
-          {/* Room Type Selector */}
+          {/* PG vs Flat Toggle + Room Type Selector */}
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "0.5rem",
+              gap: "1rem",
               flexWrap: "wrap",
             }}
           >
-            <span
+            {/* PG vs Flat Segmented Pill Toggle */}
+            <div className="pg-flat-toggle-container">
+              <button
+                type="button"
+                onClick={() => setPropertyTypeFilter("all")}
+                className={`pg-flat-toggle-btn ${propertyTypeFilter === "all" ? "active" : ""}`}
+              >
+                All Types
+              </button>
+              <button
+                type="button"
+                onClick={() => setPropertyTypeFilter("PG")}
+                className={`pg-flat-toggle-btn ${propertyTypeFilter === "PG" ? "active" : ""}`}
+              >
+                🏠 PG
+              </button>
+              <button
+                type="button"
+                onClick={() => setPropertyTypeFilter("Flat")}
+                className={`pg-flat-toggle-btn ${propertyTypeFilter === "Flat" ? "active" : ""}`}
+              >
+                🏢 Flat
+              </button>
+            </div>
+
+            {/* Room Type Selector */}
+            <div
               style={{
-                fontSize: "0.82rem",
-                fontWeight: 700,
-                color: "var(--text-muted)",
-                textTransform: "uppercase",
-                letterSpacing: "0.05em",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.4rem",
+                flexWrap: "wrap",
               }}
             >
-              Room Type:
-            </span>
+              <span
+                style={{
+                  fontSize: "0.8rem",
+                  fontWeight: 700,
+                  color: "var(--text-muted)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                Type:
+              </span>
             {["All", "Studio", "Double", "Twin", "Triple"].map((type) => (
               <button
                 key={type}
@@ -772,6 +683,7 @@ export function CityListingsPage({ onOpenAuth, theme, toggleTheme }) {
                 {type}
               </button>
             ))}
+            </div>
           </div>
 
           {/* Budget Slider */}

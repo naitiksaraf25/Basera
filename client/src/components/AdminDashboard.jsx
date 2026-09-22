@@ -147,23 +147,22 @@ export function AdminDashboard({ user }) {
         className="card"
         style={{
           display: "flex",
-          justify: "space-between",
+          justifyContent: "space-between",
           alignItems: "center",
-          marginBottom: "1rem",
-          padding: "1rem 1.25rem",
-          backgroundColor: "#1e1b4b",
-          border: "1px solid #4338ca",
+          marginBottom: "1.25rem",
+          padding: "1.25rem 1.5rem",
+          borderRadius: "18px",
         }}
       >
         <div>
-          <h3 style={{ margin: 0, color: "#a5b4fc" }}>
+          <h3 style={{ margin: 0, color: "var(--text-primary)", fontSize: "1.3rem", fontWeight: 800 }}>
             🛡️ Admin Moderation Dashboard
           </h3>
-          <span style={{ fontSize: "0.8rem", color: "#cbd5e1" }}>
-            Platform Moderation, Reports, Verification Approvals & Governance
+          <span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>
+            Platform Moderation, User Reports, Identity Approvals & Governance
           </span>
         </div>
-        <span className="badge badge-warning" style={{ fontSize: "0.8rem" }}>
+        <span className="badge badge-warning">
           👑 Admin Mode
         </span>
       </div>
@@ -176,40 +175,41 @@ export function AdminDashboard({ user }) {
 
       {successMsg && (
         <div
-          style={{
-            backgroundColor: "#22c55e20",
-            border: "1px solid #22c55e",
-            color: "#22c55e",
-            padding: "0.75rem",
-            borderRadius: "6px",
-            marginBottom: "1rem",
-            fontSize: "0.85rem",
-            fontWeight: "bold",
-          }}
+          className="status-notice"
+          style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem" }}
         >
-          ✓ {successMsg}
+          <span>✓</span>
+          <span>{successMsg}</span>
         </div>
       )}
 
       {/* Sub-tab bar */}
       <div
-        className="tab-bar"
-        style={{ justifyContent: "flex-start", marginBottom: "1rem" }}
+        style={{
+          display: "flex",
+          gap: "0.35rem",
+          background: "var(--bg-surface-subtle)",
+          padding: "4px",
+          borderRadius: "9999px",
+          border: "1px solid var(--border-subtle)",
+          marginBottom: "1.25rem",
+          width: "fit-content",
+        }}
       >
         <button
-          className={activeSubTab === "reports" ? "active" : ""}
+          className={`app-nav-pill-btn ${activeSubTab === "reports" ? "active" : ""}`}
           onClick={() => setActiveSubTab("reports")}
         >
           🚨 Moderation Reports
         </button>
         <button
-          className={activeSubTab === "verifications" ? "active" : ""}
+          className={`app-nav-pill-btn ${activeSubTab === "verifications" ? "active" : ""}`}
           onClick={() => setActiveSubTab("verifications")}
         >
           📋 Pending Verifications
         </button>
         <button
-          className={activeSubTab === "promote" ? "active" : ""}
+          className={`app-nav-pill-btn ${activeSubTab === "promote" ? "active" : ""}`}
           onClick={() => setActiveSubTab("promote")}
         >
           🔑 Promote Admin
@@ -218,16 +218,16 @@ export function AdminDashboard({ user }) {
 
       {/* 1. REPORTS TAB */}
       {activeSubTab === "reports" && (
-        <div className="card">
+        <div className="card" style={{ borderRadius: "20px" }}>
           <div
             style={{
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              marginBottom: "1rem",
+              marginBottom: "1.25rem",
             }}
           >
-            <h4 style={{ margin: 0, color: "#f8fafc" }}>User Reports</h4>
+            <h4 style={{ margin: 0, color: "var(--text-primary)", fontSize: "1.1rem", fontWeight: 700 }}>User Reports</h4>
             <div
               style={{
                 display: "flex",
@@ -236,16 +236,17 @@ export function AdminDashboard({ user }) {
                 fontSize: "0.85rem",
               }}
             >
-              <label style={{ color: "#94a3b8" }}>Status Filter:</label>
+              <label style={{ color: "var(--text-muted)" }}>Status:</label>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 style={{
-                  padding: "0.3rem 0.6rem",
-                  borderRadius: "6px",
-                  backgroundColor: "#0f172a",
-                  border: "1px solid #334155",
-                  color: "#f8fafc",
+                  padding: "0.35rem 0.75rem",
+                  borderRadius: "9999px",
+                  backgroundColor: "var(--bg-surface-subtle)",
+                  border: "1px solid var(--border-subtle)",
+                  color: "var(--text-primary)",
+                  fontSize: "0.85rem",
                 }}
               >
                 <option value="pending">Pending Only</option>
@@ -257,36 +258,36 @@ export function AdminDashboard({ user }) {
           </div>
 
           {loading ? (
-            <p style={{ color: "#94a3b8", fontSize: "0.9rem" }}>
-              Loading reports...
+            <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", textAlign: "center", padding: "1.5rem 0" }}>
+              ⏳ Loading reports...
             </p>
           ) : reports.length === 0 ? (
             <p
               style={{
-                color: "#94a3b8",
+                color: "var(--text-muted)",
                 fontSize: "0.9rem",
                 textAlign: "center",
-                padding: "1.5rem 0",
+                padding: "2rem 0",
               }}
             >
-              No reports found for filter '{statusFilter}'.
+              🎉 No reports found for filter '{statusFilter}'. Platform healthy.
             </p>
           ) : (
             <div
               style={{
                 display: "flex",
                 flexDirection: "column",
-                gap: "0.75rem",
+                gap: "0.85rem",
               }}
             >
               {reports.map((rep) => (
                 <div
                   key={rep._id || rep.id}
                   style={{
-                    padding: "0.85rem 1rem",
-                    backgroundColor: "#0f172a",
-                    border: "1px solid #334155",
-                    borderRadius: "8px",
+                    padding: "1rem 1.25rem",
+                    background: "var(--bg-surface-subtle)",
+                    border: "1px solid var(--border-subtle)",
+                    borderRadius: "14px",
                     fontSize: "0.85rem",
                   }}
                 >
@@ -295,7 +296,9 @@ export function AdminDashboard({ user }) {
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "flex-start",
-                      marginBottom: "0.4rem",
+                      marginBottom: "0.5rem",
+                      flexWrap: "wrap",
+                      gap: "0.5rem",
                     }}
                   >
                     <div>
@@ -305,36 +308,17 @@ export function AdminDashboard({ user }) {
                       >
                         {rep.reason}
                       </span>
-                      <span style={{ color: "#f8fafc", fontWeight: "bold" }}>
+                      <span style={{ color: "var(--text-primary)", fontWeight: 700 }}>
                         Reporter: {rep.reporterId}
                       </span>
-                      <span style={{ color: "#94a3b8", margin: "0 0.4rem" }}>
+                      <span style={{ color: "var(--text-muted)", margin: "0 0.4rem" }}>
                         ➔
                       </span>
-                      <span style={{ color: "#ef4444", fontWeight: "bold" }}>
-                        Reported User: {rep.reportedUserId}
+                      <span style={{ color: "#ef4444", fontWeight: 700 }}>
+                        Target: {rep.reportedUserId}
                       </span>
                     </div>
-                    <span
-                      style={{
-                        fontSize: "0.75rem",
-                        padding: "2px 8px",
-                        borderRadius: "10px",
-                        backgroundColor:
-                          rep.status === "pending"
-                            ? "#eab30830"
-                            : rep.status === "actioned"
-                              ? "#ef444430"
-                              : "#64748b30",
-                        color:
-                          rep.status === "pending"
-                            ? "#eab308"
-                            : rep.status === "actioned"
-                              ? "#ef4444"
-                              : "#94a3b8",
-                        fontWeight: "bold",
-                      }}
-                    >
+                    <span className={`badge ${rep.status === "pending" ? "badge-warning" : "badge-neutral"}`}>
                       {rep.status.toUpperCase()}{" "}
                       {rep.actionTaken !== "none" ? `(${rep.actionTaken})` : ""}
                     </span>
@@ -343,10 +327,10 @@ export function AdminDashboard({ user }) {
                   {rep.details && (
                     <p
                       style={{
-                        color: "#cbd5e1",
-                        margin: "0.4rem 0",
+                        color: "var(--text-secondary)",
+                        margin: "0.5rem 0",
                         fontStyle: "italic",
-                        fontSize: "0.8rem",
+                        fontSize: "0.85rem",
                       }}
                     >
                       "{rep.details}"
@@ -356,7 +340,7 @@ export function AdminDashboard({ user }) {
                   <div
                     style={{
                       fontSize: "0.75rem",
-                      color: "#64748b",
+                      color: "var(--text-muted)",
                       marginTop: "0.4rem",
                     }}
                   >
@@ -368,8 +352,8 @@ export function AdminDashboard({ user }) {
                     <div
                       style={{
                         display: "flex",
-                        gap: "0.4rem",
-                        marginTop: "0.75rem",
+                        gap: "0.5rem",
+                        marginTop: "0.85rem",
                         flexWrap: "wrap",
                       }}
                     >
@@ -377,11 +361,8 @@ export function AdminDashboard({ user }) {
                         onClick={() =>
                           handleReportAction(rep._id || rep.id, "dismiss")
                         }
-                        style={{
-                          background: "#475569",
-                          fontSize: "0.75rem",
-                          padding: "0.3rem 0.6rem",
-                        }}
+                        className="pill-btn-secondary"
+                        style={{ fontSize: "0.78rem", padding: "0.35rem 0.75rem" }}
                       >
                         Dismiss
                       </button>
@@ -390,11 +371,11 @@ export function AdminDashboard({ user }) {
                           handleReportAction(rep._id || rep.id, "warn")
                         }
                         style={{
-                          background: "#eab308",
-                          color: "#0f172a",
-                          fontWeight: "bold",
-                          fontSize: "0.75rem",
-                          padding: "0.3rem 0.6rem",
+                          background: "var(--accent-warm)",
+                          color: "#fff",
+                          fontWeight: 700,
+                          fontSize: "0.78rem",
+                          padding: "0.35rem 0.75rem",
                         }}
                       >
                         Warn User
@@ -404,10 +385,11 @@ export function AdminDashboard({ user }) {
                           handleReportAction(rep._id || rep.id, "suspend")
                         }
                         style={{
-                          background: "#f97316",
-                          fontWeight: "bold",
-                          fontSize: "0.75rem",
-                          padding: "0.3rem 0.6rem",
+                          background: "#ea580c",
+                          color: "#fff",
+                          fontWeight: 700,
+                          fontSize: "0.78rem",
+                          padding: "0.35rem 0.75rem",
                         }}
                       >
                         Suspend Account
@@ -418,9 +400,10 @@ export function AdminDashboard({ user }) {
                         }
                         style={{
                           background: "#ef4444",
-                          fontWeight: "bold",
-                          fontSize: "0.75rem",
-                          padding: "0.3rem 0.6rem",
+                          color: "#fff",
+                          fontWeight: 700,
+                          fontSize: "0.78rem",
+                          padding: "0.35rem 0.75rem",
                         }}
                       >
                         Ban Account
@@ -436,33 +419,32 @@ export function AdminDashboard({ user }) {
 
       {/* 2. VERIFICATIONS TAB */}
       {activeSubTab === "verifications" && (
-        <div className="card">
-          <h4 style={{ margin: "0 0 1rem 0", color: "#f8fafc" }}>
+        <div className="card" style={{ borderRadius: "20px" }}>
+          <h4 style={{ margin: "0 0 1.25rem 0", color: "var(--text-primary)", fontSize: "1.1rem", fontWeight: 700 }}>
             Pending Verification Requests ({verifications.length})
           </h4>
 
           {loading ? (
-            <p style={{ color: "#94a3b8", fontSize: "0.9rem" }}>
-              Loading pending verifications...
+            <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", textAlign: "center", padding: "1.5rem 0" }}>
+              ⏳ Loading pending verifications...
             </p>
           ) : verifications.length === 0 ? (
             <p
               style={{
-                color: "#94a3b8",
+                color: "var(--text-muted)",
                 fontSize: "0.9rem",
                 textAlign: "center",
-                padding: "1.5rem 0",
+                padding: "2rem 0",
               }}
             >
-              🎉 No pending verification requests! All candidate submissions
-              reviewed.
+              🎉 No pending verification requests! All candidate submissions reviewed.
             </p>
           ) : (
             <div
               style={{
                 display: "flex",
                 flexDirection: "column",
-                gap: "0.75rem",
+                gap: "0.85rem",
               }}
             >
               {verifications.map((u) => {
@@ -471,10 +453,10 @@ export function AdminDashboard({ user }) {
                   <div
                     key={u._id || u.id}
                     style={{
-                      padding: "0.85rem 1rem",
-                      backgroundColor: "#0f172a",
-                      border: "1px solid #334155",
-                      borderRadius: "8px",
+                      padding: "1rem 1.25rem",
+                      background: "var(--bg-surface-subtle)",
+                      border: "1px solid var(--border-subtle)",
+                      borderRadius: "14px",
                       fontSize: "0.85rem",
                     }}
                   >
@@ -483,23 +465,27 @@ export function AdminDashboard({ user }) {
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "flex-start",
+                        flexWrap: "wrap",
+                        gap: "0.75rem",
                       }}
                     >
                       <div>
                         <h5
                           style={{
                             margin: 0,
-                            color: "#f8fafc",
-                            fontSize: "1rem",
+                            color: "var(--text-primary)",
+                            fontSize: "1.05rem",
+                            fontWeight: 700,
                           }}
                         >
                           {u.name || u.email}
                         </h5>
                         <p
                           style={{
-                            margin: "2px 0",
-                            color: "#38bdf8",
+                            margin: "3px 0",
+                            color: "var(--accent-primary)",
                             textTransform: "capitalize",
+                            fontWeight: 600,
                           }}
                         >
                           Role: {u.role || "Unset"} • Method:{" "}
@@ -508,8 +494,8 @@ export function AdminDashboard({ user }) {
                         <p
                           style={{
                             margin: "2px 0",
-                            color: "#94a3b8",
-                            fontSize: "0.8rem",
+                            color: "var(--text-muted)",
+                            fontSize: "0.82rem",
                           }}
                         >
                           Email: {u.email}{" "}
@@ -524,16 +510,14 @@ export function AdminDashboard({ user }) {
                           href={pv.idDocumentUrl}
                           target="_blank"
                           rel="noreferrer"
+                          className="pill-btn-secondary"
                           style={{
-                            backgroundColor: "#2563eb",
-                            color: "#fff",
-                            padding: "0.3rem 0.6rem",
-                            borderRadius: "6px",
-                            fontSize: "0.75rem",
+                            fontSize: "0.8rem",
+                            padding: "0.4rem 0.85rem",
                             textDecoration: "none",
                           }}
                         >
-                          📄 View Uploaded ID
+                          📄 View Uploaded ID ↗
                         </a>
                       )}
                     </div>
@@ -541,19 +525,18 @@ export function AdminDashboard({ user }) {
                     <div
                       style={{
                         display: "flex",
-                        gap: "0.5rem",
-                        marginTop: "0.75rem",
+                        gap: "0.6rem",
+                        marginTop: "1rem",
                       }}
                     >
                       <button
                         onClick={() =>
                           handleVerificationAction(u.id || u._id, "approve")
                         }
+                        className="pill-btn-primary"
                         style={{
-                          background: "#22c55e",
-                          fontWeight: "bold",
-                          fontSize: "0.8rem",
-                          padding: "0.35rem 0.75rem",
+                          fontSize: "0.82rem",
+                          padding: "0.4rem 0.95rem",
                         }}
                       >
                         ✓ Approve Verification
@@ -563,13 +546,15 @@ export function AdminDashboard({ user }) {
                           handleVerificationAction(u.id || u._id, "reject")
                         }
                         style={{
-                          background: "#ef4444",
-                          fontWeight: "bold",
-                          fontSize: "0.8rem",
-                          padding: "0.35rem 0.75rem",
+                          background: "rgba(239, 68, 68, 0.1)",
+                          color: "#ef4444",
+                          border: "1px solid rgba(239, 68, 68, 0.25)",
+                          fontWeight: 700,
+                          fontSize: "0.82rem",
+                          padding: "0.4rem 0.95rem",
                         }}
                       >
-                        ✕ Reject Verification
+                        ✕ Reject
                       </button>
                     </div>
                   </div>
@@ -582,24 +567,23 @@ export function AdminDashboard({ user }) {
 
       {/* 3. PROMOTE ADMIN TAB */}
       {activeSubTab === "promote" && (
-        <div className="card">
-          <h4 style={{ margin: "0 0 0.5rem 0", color: "#f8fafc" }}>
-            Grant Admin Role to User
+        <div className="card" style={{ borderRadius: "20px" }}>
+          <h4 style={{ margin: "0 0 0.4rem 0", color: "var(--text-primary)", fontSize: "1.1rem", fontWeight: 700 }}>
+            Grant Admin Privileges
           </h4>
           <p
             style={{
               fontSize: "0.85rem",
-              color: "#94a3b8",
-              marginBottom: "1rem",
+              color: "var(--text-muted)",
+              marginBottom: "1.25rem",
             }}
           >
-            Promote an existing account to <strong>role: "admin"</strong>. Only
-            accessible by current admins.
+            Promote an existing user account to platform administrator.
           </p>
 
           <form
             onSubmit={handlePromoteAdmin}
-            style={{ display: "flex", gap: "0.5rem", maxWidth: "500px" }}
+            style={{ display: "flex", gap: "0.6rem", maxWidth: "520px" }}
           >
             <input
               type="text"
@@ -609,24 +593,25 @@ export function AdminDashboard({ user }) {
               disabled={promoting}
               style={{
                 flex: 1,
-                padding: "0.6rem",
-                borderRadius: "6px",
-                backgroundColor: "#0f172a",
-                border: "1px solid #334155",
-                color: "#f8fafc",
+                padding: "0.65rem 1rem",
+                borderRadius: "9999px",
+                border: "1px solid var(--border-subtle)",
+                background: "var(--bg-surface-subtle)",
+                color: "var(--text-primary)",
                 fontSize: "0.9rem",
               }}
             />
             <button
               type="submit"
               disabled={promoting || !promoteTarget.trim()}
+              className="pill-btn-primary"
               style={{
-                background: "#4338ca",
-                fontWeight: "bold",
-                padding: "0.6rem 1rem",
+                padding: "0.65rem 1.25rem",
+                fontSize: "0.88rem",
+                fontWeight: 700,
               }}
             >
-              {promoting ? "Promoting..." : "Promote to Admin 👑"}
+              {promoting ? "Promoting..." : "Promote 👑"}
             </button>
           </form>
         </div>
@@ -634,3 +619,4 @@ export function AdminDashboard({ user }) {
     </div>
   );
 }
+

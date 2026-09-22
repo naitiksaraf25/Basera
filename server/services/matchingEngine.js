@@ -1,6 +1,7 @@
 /**
- * RoomieMatch Matching Engine Service
- * Standalone pure-function module for candidate scoring and ranking.
+ * Basera Matching Engine Service
+ *
+ * Implements deterministic matching algorithm for: candidate scoring and ranking.
  * Implements PRD §8 requirements, hard filters, weighted scoring, proxies, and fair normalization.
  */
 

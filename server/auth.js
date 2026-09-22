@@ -20,7 +20,7 @@ dotenv.config({ path: path.join(__dirname, "../.env") });
 dotenv.config();
 
 const MONGODB_URI =
-  process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/roomiematch";
+  process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/basera";
 let client;
 try {
   client = new MongoClient(MONGODB_URI, { serverSelectionTimeoutMS: 10000 });

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { authClient } from "../lib/auth-client";
 
-export function Signup({ onSignupSuccess }) {
+export function Signup({ onSignupSuccess, audience, onChangeAudience }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -10,6 +10,13 @@ export function Signup({ onSignupSuccess }) {
   const [submitted, setSubmitted] = useState(false);
 
   const [googleLoading, setGoogleLoading] = useState(false);
+
+  // Sync intended role to local storage whenever audience is passed
+  if (audience) {
+    try {
+      localStorage.setItem("basera_intended_role", audience);
+    } catch {}
+  }
 
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
@@ -42,6 +49,9 @@ export function Signup({ onSignupSuccess }) {
     setError(null);
 
     try {
+      if (audience) {
+        localStorage.setItem("basera_intended_role", audience);
+      }
       const { data, error: apiError } = await authClient.signUp.email({
         email,
         password,
@@ -126,8 +136,62 @@ export function Signup({ onSignupSuccess }) {
     );
   }
 
+  const isLandlord = audience === "landlord";
+
   return (
     <div style={{ width: "100%", textAlign: "left" }}>
+      {/* Audience Indicator Badge */}
+      {audience && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            background: isLandlord
+              ? "var(--accent-warm-subtle)"
+              : "var(--accent-primary-subtle)",
+            border: `1px solid ${
+              isLandlord
+                ? "rgba(249, 115, 22, 0.25)"
+                : "rgba(10, 88, 246, 0.2)"
+            }`,
+            padding: "0.55rem 0.9rem",
+            borderRadius: "12px",
+            marginBottom: "1.2rem",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <span style={{ fontSize: "1.05rem" }}>
+              {isLandlord ? "🏢" : "🎓"}
+            </span>
+            <span
+              style={{
+                fontSize: "0.82rem",
+                fontWeight: 600,
+                color: isLandlord
+                  ? "var(--accent-warm)"
+                  : "var(--accent-primary)",
+              }}
+            >
+              {isLandlord ? "Listing Property / Host Path" : "Seeking Room / Student Path"}
+            </span>
+          </div>
+          {onChangeAudience && (
+            <button
+              onClick={onChangeAudience}
+              className="btn-link"
+              style={{
+                fontSize: "0.78rem",
+                fontWeight: 600,
+                color: "var(--text-muted)",
+              }}
+            >
+              Change
+            </button>
+          )}
+        </div>
+      )}
+
       <div style={{ marginBottom: "1.4rem" }}>
         <h3
           style={{
@@ -137,7 +201,11 @@ export function Signup({ onSignupSuccess }) {
             letterSpacing: "-0.02em",
           }}
         >
-          Create your account
+          {isLandlord
+            ? "Create Host Account"
+            : audience === "seeker"
+            ? "Create Seeker Account"
+            : "Create your account"}
         </h3>
         <p
           style={{
@@ -146,7 +214,9 @@ export function Signup({ onSignupSuccess }) {
             marginTop: "0.2rem",
           }}
         >
-          Join thousands of students settling into new cities with Basera
+          {isLandlord
+            ? "List verified rooms, apartments, and PG beds to student residents"
+            : "Join thousands of students finding verified rooms with zero brokerage"}
         </p>
       </div>
 

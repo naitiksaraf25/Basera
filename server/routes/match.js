@@ -15,7 +15,7 @@ dotenv.config({ path: path.join(__dirname, "../../.env") });
 dotenv.config();
 
 const router = express.Router();
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/roomiematch";
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/basera";
 
 /**
  * Helper to compare criteria objects for 24h caching

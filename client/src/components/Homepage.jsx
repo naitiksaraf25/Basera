@@ -1,15 +1,35 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { HeroIllustration } from "./HeroIllustration";
+import { BaseraLogo } from "./BaseraLogo";
+import { Navbar } from "./Navbar";
+import { getPropertyCategory, CITIES_LIST, CITY_CATALOG, STATE_CITY_MAP, STATES_LIST } from "../data/cityData";
 
-const CITY_SLUGS = {
+const CITY_SLUGS = CITIES_LIST.reduce((acc, c) => {
+  acc[c.name] = c.slug;
+  return acc;
+}, {
   "Delhi NCR": "delhi-ncr",
   Bengaluru: "bengaluru",
   Pune: "pune",
   Mumbai: "mumbai",
   Hyderabad: "hyderabad",
   Kota: "kota",
-};
+  Chennai: "chennai",
+  Kolkata: "kolkata",
+  Ahmedabad: "ahmedabad",
+  Jaipur: "jaipur",
+});
+
+// Full 148 verified listings across all 36 Tier-1 & Tier-2 cities with HTTP 200 imagery
+const ALL_CATALOG_LISTINGS = Object.values(CITY_CATALOG).flatMap((c) =>
+  c.listings.map((l) => ({
+    ...l,
+    city: c.name,
+    citySlug: c.slug,
+    state: c.state,
+  }))
+);
 
 // Curated high quality Unsplash photography of real student rooms, PGs, and study spaces
 // All with unified color grade filter applied via .curated-photo
@@ -29,7 +49,7 @@ const ROOM_LISTINGS = [
     evaluatedFactors: 7,
     confidence: "High",
     image:
-      "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=800&q=80",
     amenities: ["Wi-Fi 100Mbps", "AC", "Daily Housekeeping", "Power Backup"],
   },
   {
@@ -47,7 +67,7 @@ const ROOM_LISTINGS = [
     evaluatedFactors: 7,
     confidence: "High",
     image:
-      "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=80",
     amenities: [
       "High-speed Wi-Fi",
       "Attached Washroom",
@@ -70,7 +90,7 @@ const ROOM_LISTINGS = [
     evaluatedFactors: 6,
     confidence: "High",
     image:
-      "https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&w=800&q=80",
     amenities: [
       "Pure Veg Mess",
       "Study Library Desk",
@@ -93,7 +113,7 @@ const ROOM_LISTINGS = [
     evaluatedFactors: 7,
     confidence: "High",
     image:
-      "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80",
     amenities: [
       "AC Included",
       "Gym Access",
@@ -116,7 +136,7 @@ const ROOM_LISTINGS = [
     evaluatedFactors: 6,
     confidence: "High",
     image:
-      "https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1617806118233-18e1de247200?auto=format&fit=crop&w=800&q=80",
     amenities: [
       "Fast Wi-Fi",
       "3 Meals Included",
@@ -139,7 +159,7 @@ const ROOM_LISTINGS = [
     evaluatedFactors: 7,
     confidence: "High",
     image:
-      "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&w=800&q=80",
     amenities: [
       "Sound-insulated",
       "Doctor On-Call",
@@ -297,12 +317,21 @@ const REVIEWS = [
   },
 ];
 
-export function Homepage({ onOpenAuth, theme, toggleTheme }) {
+export function Homepage({
+  user,
+  onOpenAuth,
+  theme,
+  toggleTheme,
+  onSignOut,
+  onNavigateToView,
+}) {
   const navigate = useNavigate();
+  const [selectedState, setSelectedState] = useState("All");
   const [selectedCity, setSelectedCity] = useState("All");
   const [budgetMax, setBudgetMax] = useState(12000);
   const [selectedCategory, setSelectedCategory] =
     useState("All Accommodations");
+  const [propertyTypeFilter, setPropertyTypeFilter] = useState("all"); // 'all' | 'PG' | 'Flat'
   const [searchLocality, setSearchLocality] = useState("");
   const [activeStep, setActiveStep] = useState(1);
   const [scrolled, setScrolled] = useState(false);
@@ -322,40 +351,46 @@ export function Homepage({ onOpenAuth, theme, toggleTheme }) {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
     };
-    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Stats Intersection Observer
+  // Intersection Observer for counting stats animation
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && !statsAnimated) {
           setStatsAnimated(true);
           const duration = 1800;
-          const startTime = performance.now();
+          const steps = 60;
+          const interval = duration / steps;
+          let step = 0;
 
-          const step = (currentTime) => {
-            const elapsed = currentTime - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-            // Ease out cubic
-            const easeProgress = 1 - Math.pow(1 - progress, 3);
+          const timer = setInterval(() => {
+            step++;
+            const progress = step / steps;
+            const easeOutQuad = 1 - (1 - progress) * (1 - progress);
 
             setCounters({
-              students: Math.floor(easeProgress * 14200),
-              rooms: Math.floor(easeProgress * 3850),
-              campuses: Math.floor(easeProgress * 48),
-              rating: (easeProgress * 4.9).toFixed(1),
+              students: Math.floor(easeOutQuad * 50000),
+              rooms: Math.floor(easeOutQuad * 12000),
+              campuses: Math.floor(easeOutQuad * 120),
+              rating: (easeOutQuad * 4.9).toFixed(1),
             });
 
-            if (progress < 1) {
-              requestAnimationFrame(step);
+            if (step >= steps) {
+              clearInterval(timer);
+              setCounters({
+                students: 50000,
+                rooms: 12000,
+                campuses: 120,
+                rating: "4.9",
+              });
             }
-          };
-          requestAnimationFrame(step);
+          }, interval);
         }
       },
-      { threshold: 0.25 },
+      { threshold: 0.2 },
     );
 
     if (statsRef.current) {
@@ -364,7 +399,12 @@ export function Homepage({ onOpenAuth, theme, toggleTheme }) {
     return () => observer.disconnect();
   }, [statsAnimated]);
 
-  const filteredListings = ROOM_LISTINGS.filter((r) => {
+  const filteredListings = ALL_CATALOG_LISTINGS.filter((r) => {
+    const matchesState =
+      selectedState === "All" ||
+      r.state === selectedState ||
+      (STATE_CITY_MAP[selectedState] &&
+        STATE_CITY_MAP[selectedState].includes(r.city));
     const matchesCity = selectedCity === "All" || r.city === selectedCity;
     const matchesBudget = r.price <= budgetMax;
     const matchesCategory =
@@ -383,7 +423,17 @@ export function Homepage({ onOpenAuth, theme, toggleTheme }) {
       r.locality.toLowerCase().includes(searchLocality.toLowerCase()) ||
       r.distance.toLowerCase().includes(searchLocality.toLowerCase()) ||
       r.title.toLowerCase().includes(searchLocality.toLowerCase());
-    return matchesCity && matchesBudget && matchesCategory && matchesLocality;
+    const matchesPropertyType =
+      propertyTypeFilter === "all" ||
+      getPropertyCategory(r.roomType) === propertyTypeFilter;
+    return (
+      matchesState &&
+      matchesCity &&
+      matchesBudget &&
+      matchesCategory &&
+      matchesLocality &&
+      matchesPropertyType
+    );
   });
 
   return (
@@ -401,289 +451,72 @@ export function Homepage({ onOpenAuth, theme, toggleTheme }) {
         style={{ position: "fixed", top: 0, left: 0, zIndex: 100 }}
       />
 
-      {/* 1. STICKY NAVBAR */}
-      <header
-        style={{
-          position: "sticky",
-          top: 0,
-          zIndex: 90,
-          background: scrolled ? "var(--nav-glass-bg)" : "transparent",
-          backdropFilter: scrolled ? "blur(18px) saturate(180%)" : "none",
-          WebkitBackdropFilter: scrolled ? "blur(18px) saturate(180%)" : "none",
-          borderBottom: scrolled
-            ? "1px solid var(--nav-border)"
-            : "1px solid transparent",
-          transition:
-            "background 0.3s ease, border-color 0.3s ease, backdrop-filter 0.3s ease",
-          padding: "0.85rem 1.5rem",
-        }}
-      >
-        <div
-          style={{
-            maxWidth: "1240px",
-            margin: "0 auto",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          {/* Logo */}
-          <a
-            href="#"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "0.6rem",
-              textDecoration: "none",
-              color: "var(--text-primary)",
-            }}
-          >
-            <div
-              style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "9999px",
-                background: "var(--gradient-horizon)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 2px 8px rgba(26, 83, 184, 0.15)",
-                border: "1px solid var(--border-subtle)",
-              }}
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="var(--accent-primary)"
-                strokeWidth="2.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                <polyline points="9 22 9 12 15 12 15 22" />
-              </svg>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                textAlign: "left",
-              }}
-            >
-              <span
-                style={{
-                  fontSize: "1.3rem",
-                  fontWeight: 700,
-                  letterSpacing: "-0.03em",
-                  lineHeight: 1,
-                }}
-              >
-                Basera
-              </span>
-              <span
-                style={{
-                  fontSize: "0.68rem",
-                  color: "var(--text-muted)",
-                  letterSpacing: "0.04em",
-                  textTransform: "uppercase",
-                  fontWeight: 600,
-                }}
-              >
-                Student Living
-              </span>
-            </div>
-          </a>
-
-          {/* Nav Anchors */}
-          <nav
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "1.8rem",
-            }}
-            className="desktop-nav"
-          >
-            <a
-              href="#cities"
-              style={{
-                textDecoration: "none",
-                color: "var(--text-secondary)",
-                fontSize: "0.92rem",
-                fontWeight: 500,
-              }}
-            >
-              Cities
-            </a>
-            <a
-              href="#how-it-works"
-              style={{
-                textDecoration: "none",
-                color: "var(--text-secondary)",
-                fontSize: "0.92rem",
-                fontWeight: 500,
-              }}
-            >
-              How It Works
-            </a>
-            <a
-              href="#listings"
-              style={{
-                textDecoration: "none",
-                color: "var(--text-secondary)",
-                fontSize: "0.92rem",
-                fontWeight: 500,
-              }}
-            >
-              Verified Rooms
-            </a>
-            <a
-              href="#matching"
-              style={{
-                textDecoration: "none",
-                color: "var(--text-secondary)",
-                fontSize: "0.92rem",
-                fontWeight: 500,
-              }}
-            >
-              Compatibility Engine
-            </a>
-            <a
-              href="#reviews"
-              style={{
-                textDecoration: "none",
-                color: "var(--text-secondary)",
-                fontSize: "0.92rem",
-                fontWeight: 500,
-              }}
-            >
-              Reviews
-            </a>
-          </nav>
-
-          {/* Right Controls */}
-          <div
-            style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}
-          >
-            {/* Theme Toggle Button */}
-            <button
-              onClick={toggleTheme}
-              className="pill-btn-ghost"
-              title={
-                theme === "dark"
-                  ? "Switch to light mode"
-                  : "Switch to dark mode"
-              }
-              style={{
-                width: "40px",
-                height: "40px",
-                padding: 0,
-                borderRadius: "9999px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: "var(--bg-surface-subtle)",
-                border: "1px solid var(--border-subtle)",
-              }}
-            >
-              {theme === "dark" ? (
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#FBBF24"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <circle cx="12" cy="12" r="5" />
-                  <line x1="12" y1="1" x2="12" y2="3" />
-                  <line x1="12" y1="21" x2="12" y2="23" />
-                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                  <line x1="1" y1="12" x2="3" y2="12" />
-                  <line x1="21" y1="12" x2="23" y2="12" />
-                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-                </svg>
-              ) : (
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="var(--text-secondary)"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-                </svg>
-              )}
-            </button>
-
-            {/* Sign in button */}
-            <button
-              onClick={() => onOpenAuth("login")}
-              className="pill-btn-ghost"
-              style={{ padding: "0.55rem 1.1rem", fontSize: "0.9rem" }}
-            >
-              Sign In
-            </button>
-
-            {/* Pill Get Started CTA */}
-            <button
-              onClick={() => onOpenAuth("signup")}
-              className="pill-btn-primary"
-              style={{ fontSize: "0.9rem", padding: "0.6rem 1.35rem" }}
-            >
-              Get Started
-            </button>
-          </div>
-        </div>
-      </header>
+      {/* 1. SHARED NAVBAR */}
+      <Navbar
+        user={user}
+        onOpenAuth={onOpenAuth}
+        theme={theme}
+        toggleTheme={toggleTheme}
+        onSignOut={onSignOut}
+        onNavigateToView={onNavigateToView}
+        transparentOnTop={false}
+      />
 
       {/* 2. HERO SECTION — VIVID AZURE BLUE BAND WITH WAVE BREAK & OVERLAPPING SEARCH CARD */}
       <section className="vivid-hero-band">
+        {/* Ambient Video Background with Confident Azure Scrim */}
+        <div className="hero-video-backdrop" aria-hidden="true">
+          <video
+            className="hero-video-element"
+            autoPlay
+            muted
+            loop
+            playsInline
+            poster="/images/hero-video-poster.jpg"
+            preload="auto"
+          >
+            <source src="/videos/basera-hero-bg.mp4" type="video/mp4" />
+          </video>
+          <div className="hero-video-scrim" />
+        </div>
+
         <div
           className="hero-two-col"
           style={{ position: "relative", zIndex: 10 }}
         >
           {/* Left Column: Bold Headline, Subtext, Trust Line */}
           <div>
-            {/* Admissions Live Badge */}
+            {/* Prominent Admissions Live Announcement Banner */}
             <div
               style={{
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "0.5rem",
-                padding: "0.4rem 1.05rem",
+                gap: "0.65rem",
+                padding: "0.55rem 1.35rem",
                 borderRadius: "9999px",
-                background: "rgba(255, 255, 255, 0.16)",
-                border: "1px solid rgba(255, 255, 255, 0.28)",
-                boxShadow: "0 4px 15px rgba(0, 0, 0, 0.12)",
-                marginBottom: "1.5rem",
-                backdropFilter: "blur(6px)",
+                background: "rgba(255, 255, 255, 0.22)",
+                border: "1.5px solid rgba(255, 255, 255, 0.45)",
+                boxShadow: "0 6px 20px rgba(0, 0, 0, 0.16)",
+                marginBottom: "0.9rem",
+                backdropFilter: "blur(8px)",
               }}
             >
               <span
                 style={{
-                  width: "8px",
-                  height: "8px",
+                  width: "10px",
+                  height: "10px",
                   borderRadius: "9999px",
                   background: "#34D399",
                   display: "inline-block",
-                  boxShadow: "0 0 8px #34D399",
+                  boxShadow: "0 0 10px #34D399, 0 0 4px #FFFFFF",
                 }}
               />
               <span
                 style={{
-                  fontSize: "0.84rem",
+                  fontSize: "0.95rem",
                   fontWeight: 700,
                   color: "#FFFFFF",
-                  letterSpacing: "0.02em",
+                  letterSpacing: "0.015em",
                 }}
               >
                 Fall 2026 Admissions: 3,850+ Verified Student Rooms Live
@@ -693,12 +526,14 @@ export function Homepage({ onOpenAuth, theme, toggleTheme }) {
             {/* Confident, Scaled Headline with Warm Italic Serif Accent Word */}
             <h1
               style={{
-                fontSize: "clamp(2.75rem, 5.2vw, 4.4rem)",
+                fontSize: "clamp(2.1rem, 3.8vw, 3.3rem)",
                 fontWeight: 800,
-                lineHeight: 1.1,
-                letterSpacing: "-0.035em",
+                lineHeight: 1.14,
+                letterSpacing: "-0.03em",
                 color: "#FFFFFF",
-                marginBottom: "1.3rem",
+                marginBottom: "0.85rem",
+                textShadow:
+                  "0 2px 16px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.6)",
               }}
             >
               Find your{" "}
@@ -709,7 +544,8 @@ export function Homepage({ onOpenAuth, theme, toggleTheme }) {
                   fontWeight: 400,
                   color: "#FDBA74",
                   padding: "0 0.12em",
-                  textShadow: "0 2px 16px rgba(253, 186, 116, 0.45)",
+                  textShadow:
+                    "0 2px 16px rgba(253, 186, 116, 0.5), 0 2px 10px rgba(0, 0, 0, 0.6)",
                 }}
               >
                 people
@@ -720,12 +556,13 @@ export function Homepage({ onOpenAuth, theme, toggleTheme }) {
             {/* High-Contrast Subtext */}
             <p
               style={{
-                fontSize: "clamp(1.08rem, 1.7vw, 1.24rem)",
-                lineHeight: 1.6,
-                color: "rgba(255, 255, 255, 0.94)",
-                maxWidth: "600px",
-                margin: "0 0 2.2rem 0",
+                fontSize: "clamp(0.96rem, 1.3vw, 1.1rem)",
+                lineHeight: 1.5,
+                color: "rgba(255, 255, 255, 0.95)",
+                maxWidth: "560px",
+                margin: "0 0 1.25rem 0",
                 fontWeight: 400,
+                textShadow: "0 1px 10px rgba(0, 0, 0, 0.5)",
               }}
             >
               Verified student housing and transparent lifestyle-compatibility
@@ -738,10 +575,10 @@ export function Homepage({ onOpenAuth, theme, toggleTheme }) {
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "1.6rem",
+                gap: "1.25rem",
                 flexWrap: "wrap",
                 color: "#FFFFFF",
-                fontSize: "0.85rem",
+                fontSize: "0.84rem",
                 fontWeight: 600,
               }}
             >
@@ -814,15 +651,7 @@ export function Homepage({ onOpenAuth, theme, toggleTheme }) {
           {/* Right Column: Hero Visual Frame with Real Student Housing Photography & Floating Match Card */}
           <div className="hero-visual-frame">
             {/* Floating Top-Right Verified Context Badge */}
-            <div
-              className="hero-floating-badge-top"
-              style={{
-                background: "#FFFFFF",
-                color: "#182030",
-                border: "1px solid rgba(0,0,0,0.08)",
-                boxShadow: "0 12px 30px rgba(0, 0, 0, 0.18)",
-              }}
-            >
+            <div className="hero-floating-badge-top">
               <svg
                 width="15"
                 height="15"
@@ -835,9 +664,7 @@ export function Homepage({ onOpenAuth, theme, toggleTheme }) {
               >
                 <polyline points="20 6 9 17 4 12" />
               </svg>
-              <span style={{ fontWeight: 700 }}>
-                Verified PG Flat • North Campus, Delhi
-              </span>
+              <span style={{ color: "var(--text-primary)" }}>Verified PG Flat • North Campus, Delhi</span>
             </div>
 
             {/* Main Hero Photo Box */}
@@ -849,8 +676,8 @@ export function Homepage({ onOpenAuth, theme, toggleTheme }) {
               }}
             >
               <img
-                src="https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=1200&q=85"
-                alt="Modern Indian student room drenched in natural golden light"
+                src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=85"
+                alt="Bright sunlit student studio apartment interior"
                 className="curated-photo"
                 style={{ width: "100%", height: "100%", objectFit: "cover" }}
               />
@@ -867,16 +694,8 @@ export function Homepage({ onOpenAuth, theme, toggleTheme }) {
               />
             </div>
 
-            {/* Floating Match-Score Card Overlay with Confident Saturated Badges */}
-            <div
-              className="hero-floating-match-card"
-              style={{
-                background: "#FFFFFF",
-                color: "#182030",
-                boxShadow: "0 20px 45px rgba(0, 0, 0, 0.22)",
-                border: "1px solid rgba(0,0,0,0.06)",
-              }}
-            >
+            {/* Floating Match-Score Card Overlay with Real Student Avatars & Frosted Glass */}
+            <div className="hero-floating-match-card">
               <div
                 style={{
                   display: "flex",
@@ -888,64 +707,55 @@ export function Homepage({ onOpenAuth, theme, toggleTheme }) {
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: "0.5rem",
+                    gap: "0.6rem",
                   }}
                 >
-                  {/* Two overlapping mini avatars */}
+                  {/* Two overlapping student portrait avatars */}
                   <div
                     style={{
                       display: "flex",
                       position: "relative",
-                      width: "42px",
-                      height: "26px",
+                      width: "46px",
+                      height: "28px",
+                      alignItems: "center",
                     }}
                   >
-                    <div
+                    <img
+                      src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&h=120&q=80"
+                      alt="Ananya"
                       style={{
-                        width: "26px",
-                        height: "26px",
+                        width: "28px",
+                        height: "28px",
                         borderRadius: "9999px",
-                        background:
-                          "linear-gradient(135deg, #38BDF8 0%, #0A58F6 100%)",
-                        color: "#FFFFFF",
-                        fontSize: "0.65rem",
-                        fontWeight: 700,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        border: "2px solid #FFFFFF",
+                        objectFit: "cover",
+                        border: "2px solid var(--bg-surface)",
                         position: "absolute",
                         left: 0,
+                        zIndex: 2,
+                        boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
                       }}
-                    >
-                      AP
-                    </div>
-                    <div
+                    />
+                    <img
+                      src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=120&h=120&q=80"
+                      alt="Rohan"
                       style={{
-                        width: "26px",
-                        height: "26px",
+                        width: "28px",
+                        height: "28px",
                         borderRadius: "9999px",
-                        background:
-                          "linear-gradient(135deg, #FB923C 0%, #EA580C 100%)",
-                        color: "#FFFFFF",
-                        fontSize: "0.65rem",
-                        fontWeight: 700,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        border: "2px solid #FFFFFF",
+                        objectFit: "cover",
+                        border: "2px solid var(--bg-surface)",
                         position: "absolute",
-                        left: "16px",
+                        left: "18px",
+                        zIndex: 1,
+                        boxShadow: "0 2px 6px rgba(0,0,0,0.12)",
                       }}
-                    >
-                      RS
-                    </div>
+                    />
                   </div>
                   <span
                     style={{
                       fontSize: "0.85rem",
                       fontWeight: 700,
-                      color: "#182030",
+                      color: "var(--text-primary)",
                     }}
                   >
                     Ananya & Rohan
@@ -960,12 +770,12 @@ export function Homepage({ onOpenAuth, theme, toggleTheme }) {
                 </span>
               </div>
 
-              {/* Tiny Progress Bar */}
+              {/* Compatibility Progress Indicator */}
               <div
                 style={{
                   width: "100%",
-                  height: "5px",
-                  background: "#F1F5F9",
+                  height: "4px",
+                  background: "var(--border-subtle)",
                   borderRadius: "9999px",
                   overflow: "hidden",
                 }}
@@ -974,8 +784,7 @@ export function Homepage({ onOpenAuth, theme, toggleTheme }) {
                   style={{
                     width: "94%",
                     height: "100%",
-                    background:
-                      "linear-gradient(90deg, #38BDF8 0%, #0A58F6 50%, #FF6B00 100%)",
+                    background: "var(--gradient-accent)",
                     borderRadius: "9999px",
                   }}
                 />
@@ -987,14 +796,14 @@ export function Homepage({ onOpenAuth, theme, toggleTheme }) {
                   justifyContent: "space-between",
                   alignItems: "center",
                   fontSize: "0.74rem",
-                  color: "#64748B",
+                  color: "var(--text-muted)",
                 }}
               >
                 <span
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: "0.3rem",
+                    gap: "0.35rem",
                   }}
                 >
                   <span
@@ -1008,7 +817,7 @@ export function Homepage({ onOpenAuth, theme, toggleTheme }) {
                   />
                   7 of 7 factors evaluated
                 </span>
-                <span style={{ color: "#0A58F6", fontWeight: 700 }}>
+                <span style={{ color: "var(--accent-primary)", fontWeight: 700 }}>
                   High Confidence
                 </span>
               </div>
@@ -1022,60 +831,153 @@ export function Homepage({ onOpenAuth, theme, toggleTheme }) {
         {/* BOLD FLOATING OVERLAPPING SEARCH CARD BRIDGING HERO & CITY SECTION */}
         <div className="hero-overlap-search-wrapper">
           <div className="hero-overlap-search-card">
-            {/* Category Pill Tabs */}
-            <div className="search-category-tabs">
-              {[
-                "All Accommodations",
-                "Twin Sharing",
-                "Private Single",
-                "Girls PG",
-                "Boys PG",
-                "Near Metro",
-              ].map((cat) => (
+            {/* Search Top Filter Controls: PG vs Flat Toggle + Category Tabs */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: "0.75rem",
+                marginBottom: "0.9rem",
+              }}
+            >
+              {/* PG vs Flat Toggle */}
+              <div className="pg-flat-toggle-container">
                 <button
-                  key={cat}
                   type="button"
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`search-category-tab ${selectedCategory === cat ? "active" : ""}`}
+                  onClick={() => setPropertyTypeFilter("all")}
+                  className={`pg-flat-toggle-btn ${propertyTypeFilter === "all" ? "active" : ""}`}
                 >
-                  {cat}
+                  All Types
                 </button>
-              ))}
+                <button
+                  type="button"
+                  onClick={() => setPropertyTypeFilter("PG")}
+                  className={`pg-flat-toggle-btn ${propertyTypeFilter === "PG" ? "active" : ""}`}
+                >
+                  🏠 PG
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPropertyTypeFilter("Flat")}
+                  className={`pg-flat-toggle-btn ${propertyTypeFilter === "Flat" ? "active" : ""}`}
+                >
+                  🏢 Flat
+                </button>
+              </div>
+
+              {/* Category Pill Tabs */}
+              <div className="search-category-tabs" style={{ marginBottom: 0 }}>
+                {[
+                  "All Accommodations",
+                  "Twin Sharing",
+                  "Private Single",
+                  "Girls PG",
+                  "Boys PG",
+                  "Near Metro",
+                ].map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`search-category-tab ${selectedCategory === cat ? "active" : ""}`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Search Input Fields Grid */}
             <div className="search-fields-grid">
-              {/* 1. Target City */}
+              {/* 1. State / Region */}
+              <div className="search-input-box">
+                <label>🏛️ State / Region</label>
+                <select
+                  value={selectedState}
+                  onChange={(e) => {
+                    const st = e.target.value;
+                    setSelectedState(st);
+                    if (st !== "All") {
+                      const citiesInState = STATE_CITY_MAP[st] || [];
+                      if (!citiesInState.includes(selectedCity)) {
+                        setSelectedCity("All");
+                      }
+                    }
+                  }}
+                >
+                  <option value="All">All States (18 Regions)</option>
+                  {STATES_LIST.map((st) => (
+                    <option key={st} value={st}>
+                      {st} ({STATE_CITY_MAP[st]?.length} {STATE_CITY_MAP[st]?.length === 1 ? "Hub" : "Hubs"})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 2. Target City */}
               <div className="search-input-box">
                 <label>📍 Target Education Hub</label>
                 <select
                   value={selectedCity}
-                  onChange={(e) => setSelectedCity(e.target.value)}
+                  onChange={(e) => {
+                    const city = e.target.value;
+                    setSelectedCity(city);
+                    if (city !== "All") {
+                      const found = Object.entries(STATE_CITY_MAP).find(([st, cities]) =>
+                        cities.includes(city),
+                      );
+                      if (found) setSelectedState(found[0]);
+                    }
+                  }}
                 >
-                  <option value="All">All University Hubs</option>
-                  <option value="Delhi NCR">Delhi NCR (DU, Noida, IIT)</option>
-                  <option value="Bengaluru">
-                    Bengaluru (Christ, Koramangala)
+                  <option value="All">
+                    {selectedState === "All"
+                      ? "All 36 University Hubs"
+                      : `All Hubs in ${selectedState}`}
                   </option>
-                  <option value="Pune">Pune (Kothrud, Viman Nagar)</option>
-                  <option value="Mumbai">Mumbai (Powai, Bandra)</option>
-                  <option value="Hyderabad">Hyderabad (Gachibowli)</option>
-                  <option value="Kota">Kota (Landmark City)</option>
+                  {selectedState !== "All" ? (
+                    (STATE_CITY_MAP[selectedState] || []).map((cityName) => {
+                      const cityObj = CITIES_LIST.find((c) => c.name === cityName);
+                      return (
+                        <option key={cityName} value={cityName}>
+                          {cityName} {cityObj ? `(${cityObj.tier === 1 ? "Tier 1" : "Tier 2"})` : ""}
+                        </option>
+                      );
+                    })
+                  ) : (
+                    STATES_LIST.map((st) => (
+                      <optgroup
+                        key={st}
+                        label={`${st} (${STATE_CITY_MAP[st]?.length} ${STATE_CITY_MAP[st]?.length === 1 ? "Hub" : "Hubs"})`}
+                      >
+                        {STATE_CITY_MAP[st].map((cityName) => {
+                          const cityObj = CITIES_LIST.find((c) => c.name === cityName);
+                          return (
+                            <option key={cityName} value={cityName}>
+                              {cityName} {cityObj?.tier === 1 ? "★" : ""}
+                            </option>
+                          );
+                        })}
+                      </optgroup>
+                    ))
+                  )}
                 </select>
               </div>
 
-              {/* 2. Locality / Campus */}
+              {/* 3. Locality / Campus */}
               <div className="search-input-box">
                 <label>🎓 Campus / Locality</label>
                 <input
                   type="text"
-                  placeholder="e.g. North Campus, Powai, Christ"
+                  placeholder="e.g. Powai, North Campus, HSR"
                   value={searchLocality}
                   onChange={(e) => setSearchLocality(e.target.value)}
                 />
               </div>
 
-              {/* 3. Max Monthly Budget */}
+              {/* 4. Max Monthly Budget */}
               <div className="search-input-box">
                 <label>
                   💰 Max Budget:{" "}
@@ -1099,22 +1001,39 @@ export function Homepage({ onOpenAuth, theme, toggleTheme }) {
                 />
               </div>
 
-              {/* 4. Action Button */}
+              {/* 5. Action Button */}
               <button
                 onClick={() => {
-                  const target = document.getElementById("listings");
-                  if (target) target.scrollIntoView({ behavior: "smooth" });
+                  if (selectedCity && selectedCity !== "All") {
+                    const slug =
+                      CITY_SLUGS[selectedCity] ||
+                      selectedCity.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+                    navigate(`/rooms/${slug}`);
+                  } else if (
+                    selectedState !== "All" &&
+                    STATE_CITY_MAP[selectedState]?.length > 0
+                  ) {
+                    const firstCity = STATE_CITY_MAP[selectedState][0];
+                    const slug =
+                      CITY_SLUGS[firstCity] ||
+                      firstCity.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+                    navigate(`/rooms/${slug}`);
+                  } else {
+                    const target = document.getElementById("listings");
+                    if (target) target.scrollIntoView({ behavior: "smooth" });
+                  }
                 }}
                 className="pill-btn-primary"
                 style={{
                   background:
                     "linear-gradient(135deg, #0A58F6 0%, #0843BA 100%)",
-                  padding: "0.85rem 1.8rem",
-                  fontSize: "1rem",
+                  padding: "0.85rem 1.6rem",
+                  fontSize: "0.95rem",
                   fontWeight: 700,
                   boxShadow: "0 4px 20px rgba(10, 88, 246, 0.45)",
                   height: "100%",
                   minHeight: "52px",
+                  whiteSpace: "nowrap",
                 }}
               >
                 <svg
@@ -1151,7 +1070,7 @@ export function Homepage({ onOpenAuth, theme, toggleTheme }) {
       <section
         id="cities"
         style={{
-          padding: "5.5rem 0 3.5rem 0",
+          padding: "2.5rem 0 3rem 0",
           background: "var(--bg-canvas)",
           borderTop: "1px solid var(--border-subtle)",
           borderBottom: "1px solid var(--border-subtle)",
@@ -1208,6 +1127,19 @@ export function Homepage({ onOpenAuth, theme, toggleTheme }) {
             <span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>
               Hover to pause • Click city for dedicated listings
             </span>
+            <Link
+              to="/cities"
+              className="pill-btn-secondary"
+              style={{
+                fontSize: "0.82rem",
+                padding: "0.35rem 0.95rem",
+                textDecoration: "none",
+                display: "inline-flex",
+                alignItems: "center",
+              }}
+            >
+              View All Cities &rarr;
+            </Link>
             <button
               onClick={() => navigate("/rooms/bengaluru")}
               className="pill-btn-secondary"
@@ -1225,9 +1157,24 @@ export function Homepage({ onOpenAuth, theme, toggleTheme }) {
             {[...CITIES, ...CITIES].map((city, idx) => (
               <div
                 key={`${city.name}-${idx}`}
-                onClick={() => {
-                  const slug = CITY_SLUGS[city.name] || "bengaluru";
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const slug =
+                    CITY_SLUGS[city.name] ||
+                    city.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
                   navigate(`/rooms/${slug}`);
+                }}
+                role="link"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    const slug =
+                      CITY_SLUGS[city.name] ||
+                      city.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+                    navigate(`/rooms/${slug}`);
+                  }
                 }}
                 className="basera-card"
                 style={{
@@ -1629,23 +1576,60 @@ export function Homepage({ onOpenAuth, theme, toggleTheme }) {
                 Featured listings in{" "}
                 <span className="headline-accent">
                   {selectedCity === "All"
-                    ? "prime student areas"
+                    ? selectedState === "All"
+                      ? "prime student areas"
+                      : selectedState
                     : selectedCity}
                 </span>
               </h2>
             </div>
 
             {/* City Quick Filter Pills */}
-            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-              {[
-                "All",
-                "Delhi NCR",
-                "Bengaluru",
-                "Pune",
-                "Mumbai",
-                "Hyderabad",
-                "Kota",
-              ].map((c) => (
+            <div
+              style={{
+                display: "flex",
+                gap: "0.5rem",
+                flexWrap: "wrap",
+                alignItems: "center",
+              }}
+            >
+              {selectedState !== "All" && (
+                <button
+                  onClick={() => {
+                    setSelectedState("All");
+                    setSelectedCity("All");
+                  }}
+                  style={{
+                    borderRadius: "9999px",
+                    padding: "0.38rem 0.85rem",
+                    fontSize: "0.78rem",
+                    fontWeight: 700,
+                    background: "rgba(239, 68, 68, 0.12)",
+                    color: "#EF4444",
+                    border: "1px solid rgba(239, 68, 68, 0.3)",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}
+                  title="Clear state filter"
+                >
+                  ✕ {selectedState}
+                </button>
+              )}
+              {(selectedState !== "All"
+                ? ["All", ...(STATE_CITY_MAP[selectedState] || [])]
+                : [
+                    "All",
+                    "Delhi NCR",
+                    "Bengaluru",
+                    "Pune",
+                    "Mumbai",
+                    "Hyderabad",
+                    "Kota",
+                    "Chennai",
+                    "Kolkata",
+                    "Jaipur",
+                  ]
+              ).map((c) => (
                 <button
                   key={c}
                   onClick={() => setSelectedCity(c)}
@@ -2914,26 +2898,18 @@ export function Homepage({ onOpenAuth, theme, toggleTheme }) {
               >
                 <div
                   style={{
-                    width: "32px",
-                    height: "32px",
-                    borderRadius: "9999px",
-                    background: "var(--gradient-horizon)",
+                    width: "34px",
+                    height: "34px",
+                    borderRadius: "10px",
+                    background: "var(--bg-surface)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
+                    border: "1px solid var(--border-subtle)",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.06)",
                   }}
                 >
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="var(--accent-primary)"
-                    strokeWidth="2.2"
-                  >
-                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                    <polyline points="9 22 9 12 15 12 15 22" />
-                  </svg>
+                  <BaseraLogo size={22} />
                 </div>
                 <span
                   style={{
@@ -3045,15 +3021,15 @@ export function Homepage({ onOpenAuth, theme, toggleTheme }) {
                 }}
               >
                 <li>
-                  <a
-                    href="#cities"
+                  <Link
+                    to="/cities"
                     style={{
                       textDecoration: "none",
                       color: "var(--text-secondary)",
                     }}
                   >
                     Browse Cities
-                  </a>
+                  </Link>
                 </li>
                 <li>
                   <a

@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 export function WarningModal({ warning, onAcknowledged }) {
+  if (!warning) return null;
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
@@ -139,7 +140,7 @@ export function WarningModal({ warning, onAcknowledged }) {
             marginBottom: "1.25rem",
           }}
         >
-          Please acknowledge this notice to continue using RoomieMatch. Further
+          Please acknowledge this notice to continue using Basera. Further
           violations may result in account suspension or permanent termination.
         </p>
 

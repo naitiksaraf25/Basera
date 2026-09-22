@@ -12,7 +12,7 @@ dotenv.config();
 
 const router = express.Router();
 const MONGODB_URI =
-  process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/roomiematch";
+  process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/basera";
 
 /**
  * POST /api/user/acknowledge-warning

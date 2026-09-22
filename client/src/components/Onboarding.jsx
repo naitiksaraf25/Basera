@@ -1,7 +1,15 @@
 import { useState } from "react";
 
 export function Onboarding({ user, onUserUpdated }) {
-  const [selectedRole, setSelectedRole] = useState("");
+  const [selectedRole, setSelectedRole] = useState(() => {
+    try {
+      const intended = localStorage.getItem("basera_intended_role");
+      if (intended === "landlord" || intended === "seeker" || intended === "resident") {
+        return intended;
+      }
+    } catch {}
+    return "";
+  });
   const [collegeEmail, setCollegeEmail] = useState("");
   const [idFile, setIdFile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -86,52 +94,96 @@ export function Onboarding({ user, onUserUpdated }) {
   // STEP 1: ROLE SELECTION (if role is unset)
   if (!user.role) {
     return (
-      <div className="auth-card" style={{ maxWidth: "600px", margin: "0 auto" }}>
-        <h3>Welcome to RoomieMatch!</h3>
-        <p style={{ color: "#94a3b8" }}>Please select your account role to continue:</p>
+      <div className="card" style={{ maxWidth: "680px", margin: "1.5rem auto", borderRadius: "24px" }}>
+        <div style={{ textAlign: "center", marginBottom: "1.75rem" }}>
+          <h2 style={{ fontSize: "1.6rem", fontWeight: 800, margin: 0, color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
+            Welcome to Basera! 👋
+          </h2>
+          <p style={{ color: "var(--text-muted)", fontSize: "0.92rem", marginTop: "0.4rem" }}>
+            Choose how you would like to use the platform to customize your experience.
+          </p>
+        </div>
+
         {error && <div className="error-alert">{error}</div>}
 
-        <div style={{ display: "grid", gap: "1rem", marginTop: "1.5rem" }}>
+        <div style={{ display: "grid", gap: "1rem", marginTop: "1.25rem" }}>
           <div
-            className={`card ${selectedRole === "seeker" ? "selected-card" : ""}`}
-            style={{ cursor: "pointer", border: selectedRole === "seeker" ? "2px solid #6366f1" : "1px solid #334155" }}
+            className="card"
+            style={{
+              cursor: "pointer",
+              border: selectedRole === "seeker" ? "2px solid var(--accent-primary)" : "1px solid var(--border-subtle)",
+              background: selectedRole === "seeker" ? "var(--accent-primary-subtle)" : "var(--bg-surface-subtle)",
+              padding: "1.25rem",
+              borderRadius: "16px",
+              transition: "all 0.2s ease",
+            }}
             onClick={() => setSelectedRole("seeker")}
           >
-            <h4>🎓 Seeker</h4>
-            <p style={{ fontSize: "0.9rem", color: "#94a3b8" }}>
-              Student looking for a room, flat, or PG bed in the city.
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h4 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700, color: "var(--text-primary)" }}>
+                🎓 Student Seeker
+              </h4>
+              {selectedRole === "seeker" && <span className="badge badge-primary">Selected</span>}
+            </div>
+            <p style={{ fontSize: "0.88rem", color: "var(--text-secondary)", margin: "0.35rem 0 0 0" }}>
+              Looking for a verified private room, shared flat, or PG bed near college.
             </p>
           </div>
 
           <div
-            className={`card ${selectedRole === "resident" ? "selected-card" : ""}`}
-            style={{ cursor: "pointer", border: selectedRole === "resident" ? "2px solid #6366f1" : "1px solid #334155" }}
+            className="card"
+            style={{
+              cursor: "pointer",
+              border: selectedRole === "resident" ? "2px solid var(--accent-primary)" : "1px solid var(--border-subtle)",
+              background: selectedRole === "resident" ? "var(--accent-primary-subtle)" : "var(--bg-surface-subtle)",
+              padding: "1.25rem",
+              borderRadius: "16px",
+              transition: "all 0.2s ease",
+            }}
             onClick={() => setSelectedRole("resident")}
           >
-            <h4>🏠 Resident Space-holder</h4>
-            <p style={{ fontSize: "0.9rem", color: "#94a3b8" }}>
-              Current tenant living in a flat/PG with a spare bed or room to fill.
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h4 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700, color: "var(--text-primary)" }}>
+                🏠 Resident Flatmate
+              </h4>
+              {selectedRole === "resident" && <span className="badge badge-primary">Selected</span>}
+            </div>
+            <p style={{ fontSize: "0.88rem", color: "var(--text-secondary)", margin: "0.35rem 0 0 0" }}>
+              Current tenant living in a flat/PG with an open room or bed to fill with a compatible roommate.
             </p>
           </div>
 
           <div
-            className={`card ${selectedRole === "landlord" ? "selected-card" : ""}`}
-            style={{ cursor: "pointer", border: selectedRole === "landlord" ? "2px solid #6366f1" : "1px solid #334155" }}
+            className="card"
+            style={{
+              cursor: "pointer",
+              border: selectedRole === "landlord" ? "2px solid var(--accent-primary)" : "1px solid var(--border-subtle)",
+              background: selectedRole === "landlord" ? "var(--accent-primary-subtle)" : "var(--bg-surface-subtle)",
+              padding: "1.25rem",
+              borderRadius: "16px",
+              transition: "all 0.2s ease",
+            }}
             onClick={() => setSelectedRole("landlord")}
           >
-            <h4>🔑 Landlord / Property Owner</h4>
-            <p style={{ fontSize: "0.9rem", color: "#94a3b8" }}>
-              Property owner or PG manager (non-resident) listing accommodations.
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h4 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700, color: "var(--text-primary)" }}>
+                🏢 Property Owner / PG Host
+              </h4>
+              {selectedRole === "landlord" && <span className="badge badge-primary">Selected</span>}
+            </div>
+            <p style={{ fontSize: "0.88rem", color: "var(--text-secondary)", margin: "0.35rem 0 0 0" }}>
+              Host or property landlord listing accommodations for verified student tenants.
             </p>
           </div>
         </div>
 
         <button
-          style={{ marginTop: "1.5rem", width: "100%" }}
+          style={{ marginTop: "1.75rem", width: "100%", padding: "0.85rem", fontSize: "1rem", fontWeight: 700 }}
+          className="pill-btn-primary"
           disabled={!selectedRole || loading}
           onClick={() => handleRoleSubmit(selectedRole)}
         >
-          {loading ? "Saving Role..." : "Continue with Selected Role"}
+          {loading ? "Saving Role..." : "Continue to Basera Portal →"}
         </button>
       </div>
     );
@@ -143,73 +195,101 @@ export function Onboarding({ user, onUserUpdated }) {
 
   if (!isVerified) {
     return (
-      <div className="auth-card" style={{ maxWidth: "600px", margin: "0 auto" }}>
-        <h3>Platform Verification Required</h3>
-        <p style={{ color: "#94a3b8" }}>
-          Current Role: <strong style={{ color: "#a5b4fc" }}>{user.role.toUpperCase()}</strong> | Status:{" "}
-          <span className="badge badge-warning">{user.platformVerification?.status || "pending"}</span>
-        </p>
+      <div className="card" style={{ maxWidth: "680px", margin: "1.5rem auto", borderRadius: "24px", textAlign: "left" }}>
+        <div style={{ borderBottom: "1px solid var(--border-subtle)", paddingBottom: "1.25rem", marginBottom: "1.5rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
+            <h3 style={{ margin: 0, fontSize: "1.35rem", fontWeight: 800, color: "var(--text-primary)" }}>
+              🛡️ Verification Status
+            </h3>
+            <span className="badge badge-warning">
+              Pending Verification
+            </span>
+          </div>
+          <p style={{ color: "var(--text-muted)", fontSize: "0.88rem", marginTop: "0.35rem" }}>
+            Account Role: <strong style={{ color: "var(--accent-primary)", textTransform: "uppercase" }}>{user.role}</strong> • Complete verification to unlock AI matching and private chats.
+          </p>
+        </div>
 
         {error && <div className="error-alert">{error}</div>}
-        {notice && <div className="status-notice">{notice}</div>}
+        {notice && (
+          <div className="status-notice" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <span>✓</span>
+            <span>{notice}</span>
+          </div>
+        )}
 
         {isSeekerOrResident ? (
-          <div>
-            <h4>🎓 College Affiliation Verification (US-2)</h4>
-            <p style={{ fontSize: "0.9rem", color: "#94a3b8" }}>
-              To ensure platform safety, students must verify a college email address (@stanford.edu, @mit.edu, @iit.ac.in, etc.).
+          <div style={{ background: "var(--bg-surface-subtle)", padding: "1.5rem", borderRadius: "16px", border: "1px solid var(--border-subtle)" }}>
+            <h4 style={{ margin: "0 0 0.35rem 0", fontSize: "1.1rem", fontWeight: 700, color: "var(--text-primary)" }}>
+              🎓 Student College Email Verification
+            </h4>
+            <p style={{ fontSize: "0.88rem", color: "var(--text-muted)", margin: "0 0 1.25rem 0" }}>
+              To ensure platform safety and trusted student housing, verify a valid university email address (.edu or .ac.in).
             </p>
-            <form onSubmit={handleCollegeEmailSubmit} style={{ marginTop: "1rem" }}>
-              <div className="form-group">
-                <label>Secondary College Email</label>
+            <form onSubmit={handleCollegeEmailSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label>Institutional College Email</label>
                 <input
                   type="email"
                   required
                   value={collegeEmail}
                   onChange={(e) => setCollegeEmail(e.target.value)}
-                  placeholder="student@university.edu"
+                  placeholder="name@university.edu or name@iitb.ac.in"
                 />
               </div>
-              <button type="submit" disabled={loading}>
-                {loading ? "Generating Link..." : "Send Verification Link"}
+              <button
+                type="submit"
+                disabled={loading}
+                className="pill-btn-primary"
+                style={{ width: "100%", padding: "0.8rem", fontWeight: 700 }}
+              >
+                {loading ? "Generating Verification Link..." : "Send Verification Token"}
               </button>
             </form>
           </div>
         ) : (
-          <div>
-            <h4>🔑 Landlord ID Verification (US-3)</h4>
-            <p style={{ fontSize: "0.9rem", color: "#94a3b8" }}>
-              Property owners must upload a government ID (Driver's License, Passport, or Aadhar) for manual admin review.
+          <div style={{ background: "var(--bg-surface-subtle)", padding: "1.5rem", borderRadius: "16px", border: "1px solid var(--border-subtle)" }}>
+            <h4 style={{ margin: "0 0 0.35rem 0", fontSize: "1.1rem", fontWeight: 700, color: "var(--text-primary)" }}>
+              🔑 Landlord Identity Verification
+            </h4>
+            <p style={{ fontSize: "0.88rem", color: "var(--text-muted)", margin: "0 0 1.25rem 0" }}>
+              Property owners must provide a government-issued ID (Passport, Driving License, or Aadhaar) for trust & safety review.
             </p>
 
             {user.platformVerification?.idDocumentUrl ? (
               <div className="status-notice" style={{ marginTop: "1rem" }}>
-                <p><strong>✅ ID Document Uploaded:</strong> {user.platformVerification.idDocumentUrl}</p>
-                <p style={{ fontSize: "0.85rem", color: "#94a3b8" }}>
-                  Status: <strong>PENDING ADMIN REVIEW</strong>. (Note: No admin approval UI exists yet — verifications sit at pending until manually reviewed or set in DB).
+                <p style={{ margin: 0 }}><strong>✅ ID Document Uploaded:</strong> Under review by Basera Trust & Safety.</p>
+                <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "0.5rem" }}>
+                  Status: <strong>PENDING REVIEW</strong>
                 </p>
                 <a
                   href={user.platformVerification.idDocumentUrl}
                   target="_blank"
                   rel="noreferrer"
-                  style={{ color: "#818cf8", fontSize: "0.9rem" }}
+                  style={{ color: "var(--accent-primary)", fontSize: "0.88rem", fontWeight: 600, textDecoration: "underline" }}
                 >
-                  🔒 View My Uploaded ID Document (Protected Route)
+                  View Uploaded Document ↗
                 </a>
               </div>
             ) : (
-              <form onSubmit={handleIdUploadSubmit} style={{ marginTop: "1rem" }}>
-                <div className="form-group">
-                  <label>Government ID Document (Image or PDF)</label>
+              <form onSubmit={handleIdUploadSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label>Government ID Document (PDF, PNG, JPG)</label>
                   <input
                     type="file"
                     accept="image/jpeg,image/png,image/webp,application/pdf"
                     required
                     onChange={(e) => setIdFile(e.target.files[0])}
+                    style={{ padding: "0.4rem" }}
                   />
                 </div>
-                <button type="submit" disabled={loading}>
-                  {loading ? "Uploading Document..." : "Upload Government ID"}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="pill-btn-primary"
+                  style={{ width: "100%", padding: "0.8rem", fontWeight: 700 }}
+                >
+                  {loading ? "Uploading Document..." : "Submit ID for Verification"}
                 </button>
               </form>
             )}
@@ -220,10 +300,34 @@ export function Onboarding({ user, onUserUpdated }) {
   }
 
   return (
-    <div className="auth-card">
-      <h3>✅ Onboarding & Platform Verification Complete!</h3>
-      <p>Role: <strong>{user.role}</strong></p>
-      <p>Verification Method: <strong>{user.platformVerification?.method}</strong></p>
+    <div className="card" style={{ maxWidth: "680px", margin: "1.5rem auto", borderRadius: "24px", textAlign: "left" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.25rem" }}>
+        <div style={{ width: "52px", height: "52px", borderRadius: "16px", background: "var(--accent-success-subtle)", color: "var(--accent-success)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.6rem" }}>
+          ✓
+        </div>
+        <div>
+          <h3 style={{ margin: 0, fontSize: "1.3rem", fontWeight: 800, color: "var(--text-primary)" }}>
+            Platform Verification Complete
+          </h3>
+          <span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>
+            Your identity has been authenticated and approved
+          </span>
+        </div>
+      </div>
+
+      <div style={{ background: "var(--bg-surface-subtle)", padding: "1.25rem", borderRadius: "16px", border: "1px solid var(--border-subtle)" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", fontSize: "0.88rem" }}>
+          <div>
+            <span style={{ color: "var(--text-muted)", fontSize: "0.75rem", display: "block" }}>Verified Role</span>
+            <strong style={{ color: "var(--text-primary)", textTransform: "capitalize" }}>{user.role}</strong>
+          </div>
+          <div>
+            <span style={{ color: "var(--text-muted)", fontSize: "0.75rem", display: "block" }}>Verification Method</span>
+            <strong style={{ color: "var(--text-primary)" }}>{user.platformVerification?.method || "College Email"}</strong>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
+

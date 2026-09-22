@@ -59,7 +59,7 @@ async function getCandidatePublicInfo(participantId) {
   return {
     candidateId: String(participantId),
     userId: String(participantId),
-    name: "RoomieMatch User",
+    name: "Basera User",
     photoUrl: null,
     role: "user",
   };

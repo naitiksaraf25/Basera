@@ -40,7 +40,7 @@ const app = express();
 
 const PORT = process.env.PORT || 5000;
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/roomiematch";
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/basera";
 
 // CORS configuration with explicit allowed origin
 app.use(
@@ -92,7 +92,7 @@ app.get("/api/health", (req, res) => {
     status: "ok",
     timestamp: new Date().toISOString(),
     mongodb: isConnected ? "connected" : "disconnected",
-    message: "RoomieMatch Server is up and running.",
+    message: "Basera Server is up and running.",
   });
 });
 
