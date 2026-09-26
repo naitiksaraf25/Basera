@@ -2,6 +2,7 @@ import express from "express";
 import { requireAdmin } from "../middleware/auth.js";
 import Report from "../models/Report.js";
 import { MongoClient, ObjectId } from "mongodb";
+import { getAiModerationSuggestion } from "../services/aiModerator.js";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -227,6 +228,65 @@ router.post("/reports/:id/action", async (req, res) => {
     return res.status(500).json({
       error: "Internal Server Error",
       message: err.message,
+    });
+  }
+});
+
+/**
+ * POST /api/admin/reports/:reportId/ai-suggest
+ * Generates an advisory trust & safety action suggestion via Gemini API.
+ * Advisory only — admin still manually applies any moderation action.
+ * Strictly guarded by requireAdmin middleware.
+ * Never leaks GEMINI_API_KEY in any response payload or error.
+ */
+router.post("/reports/:reportId/ai-suggest", async (req, res) => {
+  try {
+    const { reportId } = req.params;
+    const report = await Report.findById(reportId);
+    if (!report) {
+      return res.status(404).json({
+        error: "Not Found",
+        message: "Report not found.",
+      });
+    }
+
+    // Look up reported user to determine role
+    const reportedUserId = String(report.reportedUserId);
+    const filterConditions = [{ _id: reportedUserId }, { id: reportedUserId }];
+    if (ObjectId.isValid(reportedUserId)) {
+      filterConditions.push({ _id: new ObjectId(reportedUserId) });
+    }
+    const reportedUser = await findUser({ $or: filterConditions });
+
+    // Call server-side Gemini moderation service
+    const suggestion = await getAiModerationSuggestion({
+      reason: report.reason,
+      details: report.details,
+      reportedUserRole: reportedUser?.role || "user",
+    });
+
+    if (!suggestion) {
+      return res.status(200).json({
+        available: false,
+        message: "AI suggestion unavailable",
+        suggestion: null,
+      });
+    }
+
+    return res.status(200).json({
+      available: true,
+      reportId: report._id,
+      suggestion: {
+        action: suggestion.action,
+        justification: suggestion.justification,
+      },
+    });
+  } catch (err) {
+    console.error("[Admin AI Suggest Action Error]:", err);
+    return res.status(200).json({
+      available: false,
+      message: "AI suggestion unavailable",
+      suggestion: null,
     });
   }
 });

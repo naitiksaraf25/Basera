@@ -28,6 +28,7 @@ import chatRouter from "./routes/chat.js";
 import reportRouter from "./routes/report.js";
 import adminRouter from "./routes/admin.js";
 import userRouter from "./routes/user.js";
+import aiRouter from "./routes/ai.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -65,6 +66,7 @@ app.use("/api/chat", chatRouter);
 app.use("/api/report", reportRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/user", userRouter);
+app.use("/api/ai", aiRouter);
 
 // Secure Private Document Handler & Public Photo Handler
 app.use("/api/documents", documentsRouter);

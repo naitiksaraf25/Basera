@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { BaseraLogo } from "./BaseraLogo";
 
@@ -14,6 +14,7 @@ export function Navbar({
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
   const location = useLocation();
 
   useEffect(() => {
@@ -29,6 +30,21 @@ export function Navbar({
     setMobileMenuOpen(false);
     setUserDropdownOpen(false);
   }, [location.pathname]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setUserDropdownOpen(false);
+      }
+    };
+    if (userDropdownOpen) {
+      document.addEventListener("mousedown", handleOutsideClick);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [userDropdownOpen]);
 
   const isDark = theme === "dark";
   const isCitiesPage = location.pathname === "/cities";
@@ -312,9 +328,92 @@ export function Navbar({
 
           {/* Conditional Auth Controls */}
           {user ? (
-            /* Logged-In User Profile Pill & Dropdown */
-            <div style={{ position: "relative" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+              {/* Standalone Visible Quick-Access Links: Find Matches & Active Chats */}
+              <Link
+                to="/app/matches"
+                id="navbar-find-matches"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.35rem",
+                  padding: "0.45rem 0.85rem",
+                  borderRadius: "10px",
+                  fontSize: "0.88rem",
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  color: location.pathname === "/app/matches"
+                    ? "var(--accent-primary)"
+                    : "var(--text-secondary)",
+                  background: location.pathname === "/app/matches"
+                    ? "var(--accent-subtle)"
+                    : "transparent",
+                  border: "1px solid var(--border-subtle)",
+                  transition: "all 0.18s ease",
+                  cursor: "pointer",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = "var(--text-primary)";
+                  e.currentTarget.style.borderColor = "var(--border-strong)";
+                  e.currentTarget.style.background = "var(--bg-surface-subtle)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = location.pathname === "/app/matches"
+                    ? "var(--accent-primary)"
+                    : "var(--text-secondary)";
+                  e.currentTarget.style.borderColor = "var(--border-subtle)";
+                  e.currentTarget.style.background = location.pathname === "/app/matches"
+                    ? "var(--accent-subtle)"
+                    : "transparent";
+                }}
+              >
+                Find Matches
+              </Link>
+
+              <Link
+                to="/app/chats"
+                id="navbar-active-chats"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.35rem",
+                  padding: "0.45rem 0.85rem",
+                  borderRadius: "10px",
+                  fontSize: "0.88rem",
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  color: location.pathname === "/app/chats"
+                    ? "var(--accent-primary)"
+                    : "var(--text-secondary)",
+                  background: location.pathname === "/app/chats"
+                    ? "var(--accent-subtle)"
+                    : "transparent",
+                  border: "1px solid var(--border-subtle)",
+                  transition: "all 0.18s ease",
+                  cursor: "pointer",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = "var(--text-primary)";
+                  e.currentTarget.style.borderColor = "var(--border-strong)";
+                  e.currentTarget.style.background = "var(--bg-surface-subtle)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = location.pathname === "/app/chats"
+                    ? "var(--accent-primary)"
+                    : "var(--text-secondary)";
+                  e.currentTarget.style.borderColor = "var(--border-subtle)";
+                  e.currentTarget.style.background = location.pathname === "/app/chats"
+                    ? "var(--accent-subtle)"
+                    : "transparent";
+                }}
+              >
+                Active Chats
+              </Link>
+
+              {/* Logged-In User Profile Pill & Dropdown */}
+              <div style={{ position: "relative" }} ref={dropdownRef}>
               <button
+                id="navbar-user-btn"
                 onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                 style={{
                   display: "flex",
@@ -449,62 +548,6 @@ export function Navbar({
                     <span>👤</span> {user?.role === "landlord" ? "Property Listing" : "Profile & Preferences"}
                   </Link>
 
-                  {user?.role !== "landlord" && (
-                    <Link
-                      to="/app/matches"
-                      onClick={() => setUserDropdownOpen(false)}
-                      style={{
-                        width: "100%",
-                        textAlign: "left",
-                        padding: "0.55rem 0.8rem",
-                        background: "none",
-                        borderRadius: "8px",
-                        fontSize: "0.85rem",
-                        fontWeight: 500,
-                        color: "var(--text-primary)",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.5rem",
-                        textDecoration: "none",
-                      }}
-                      onMouseEnter={(e) =>
-                        (e.currentTarget.style.background = "var(--bg-surface-subtle)")
-                      }
-                      onMouseLeave={(e) =>
-                        (e.currentTarget.style.background = "none")
-                      }
-                    >
-                      <span>✨</span> Find Matches
-                    </Link>
-                  )}
-
-                  <Link
-                    to="/app/chats"
-                    onClick={() => setUserDropdownOpen(false)}
-                    style={{
-                      width: "100%",
-                      textAlign: "left",
-                      padding: "0.55rem 0.8rem",
-                      background: "none",
-                      borderRadius: "8px",
-                      fontSize: "0.85rem",
-                      fontWeight: 500,
-                      color: "var(--text-primary)",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.5rem",
-                      textDecoration: "none",
-                    }}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.background = "var(--bg-surface-subtle)")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.background = "none")
-                    }
-                  >
-                    <span>💬</span> Active Chats
-                  </Link>
-
                   <Link
                     to="/app/verification"
                     onClick={() => setUserDropdownOpen(false)}
@@ -601,7 +644,8 @@ export function Navbar({
                 </div>
               )}
             </div>
-          ) : (
+          </div>
+        ) : (
             /* Logged-Out Visitor CTAs */
             <>
               <button

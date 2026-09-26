@@ -20,6 +20,7 @@ import { AudienceChooser } from "./components/AudienceChooser";
 import { BaseraLogo } from "./components/BaseraLogo";
 import { WarningModal } from "./components/WarningModal";
 import { ScrollToTop } from "./components/ScrollToTop";
+import AiChatWidget from "./components/AiChatWidget";
 import "./index.css";
 
 export function App() {
@@ -509,6 +510,9 @@ export function App() {
         {/* Catch-all */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+
+      {/* Floating AI Concierge Chatbot Widget (Public-Facing Pages) */}
+      {!location.pathname.startsWith("/app") && <AiChatWidget />}
     </div>
   );
 }

@@ -8,10 +8,48 @@ export function AdminDashboard({ user }) {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
+  const [aiSuggestions, setAiSuggestions] = useState({});
+  const [aiLoading, setAiLoading] = useState({});
 
   // Form state for promoting user to admin
   const [promoteTarget, setPromoteTarget] = useState("");
   const [promoting, setPromoting] = useState(false);
+
+  // Request AI Advisory Suggestion for a report
+  const handleAiSuggest = async (reportId) => {
+    setAiLoading((prev) => ({ ...prev, [reportId]: true }));
+    try {
+      const res = await fetch(`/api/admin/reports/${reportId}/ai-suggest`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+      if (data.available && data.suggestion) {
+        setAiSuggestions((prev) => ({
+          ...prev,
+          [reportId]: data.suggestion,
+        }));
+      } else {
+        setAiSuggestions((prev) => ({
+          ...prev,
+          [reportId]: {
+            action: "unavailable",
+            justification: data.message || "AI suggestion unavailable at this time.",
+          },
+        }));
+      }
+    } catch (err) {
+      setAiSuggestions((prev) => ({
+        ...prev,
+        [reportId]: {
+          action: "error",
+          justification: "Network error fetching AI suggestion.",
+        },
+      }));
+    } finally {
+      setAiLoading((prev) => ({ ...prev, [reportId]: false }));
+    }
+  };
 
   // Fetch reports
   const fetchReports = async () => {
@@ -408,6 +446,87 @@ export function AdminDashboard({ user }) {
                       >
                         Ban Account
                       </button>
+
+                      {/* 🤖 AI Suggest Action Button */}
+                      <button
+                        id={`ai-suggest-btn-${rep._id || rep.id}`}
+                        onClick={() => handleAiSuggest(rep._id || rep.id)}
+                        disabled={aiLoading[rep._id || rep.id]}
+                        className="pill-btn-ghost"
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "0.35rem",
+                          fontSize: "0.78rem",
+                          padding: "0.35rem 0.75rem",
+                          borderRadius: "9999px",
+                          background: "rgba(99, 102, 241, 0.12)",
+                          color: "var(--accent-primary)",
+                          border: "1px solid rgba(99, 102, 241, 0.35)",
+                          fontWeight: 700,
+                          cursor: aiLoading[rep._id || rep.id] ? "not-allowed" : "pointer",
+                        }}
+                      >
+                        {aiLoading[rep._id || rep.id] ? "⏳ Analyzing..." : "🤖 AI Suggest Action"}
+                      </button>
+
+                      {/* Advisory Suggestion Display Box */}
+                      {aiSuggestions[rep._id || rep.id] && (
+                        <div
+                          id={`ai-suggestion-box-${rep._id || rep.id}`}
+                          style={{
+                            width: "100%",
+                            marginTop: "0.65rem",
+                            padding: "0.75rem 0.9rem",
+                            borderRadius: "12px",
+                            background: "var(--bg-surface)",
+                            border: "1px solid rgba(99, 102, 241, 0.35)",
+                            fontSize: "0.82rem",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "0.3rem",
+                          }}
+                        >
+                          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                            <span style={{ fontWeight: 800, color: "var(--accent-primary)" }}>
+                              🤖 AI Advisory Suggestion:
+                            </span>
+                            <span
+                              style={{
+                                textTransform: "uppercase",
+                                fontWeight: 800,
+                                fontSize: "0.74rem",
+                                padding: "0.15rem 0.5rem",
+                                borderRadius: "6px",
+                                background:
+                                  aiSuggestions[rep._id || rep.id].action === "ban"
+                                    ? "rgba(239, 68, 68, 0.15)"
+                                    : aiSuggestions[rep._id || rep.id].action === "suspend"
+                                    ? "rgba(234, 88, 12, 0.15)"
+                                    : aiSuggestions[rep._id || rep.id].action === "warn"
+                                    ? "rgba(245, 158, 11, 0.15)"
+                                    : "rgba(16, 185, 129, 0.15)",
+                                color:
+                                  aiSuggestions[rep._id || rep.id].action === "ban"
+                                    ? "#ef4444"
+                                    : aiSuggestions[rep._id || rep.id].action === "suspend"
+                                    ? "#ea580c"
+                                    : aiSuggestions[rep._id || rep.id].action === "warn"
+                                    ? "#f59e0b"
+                                    : "#10b981",
+                              }}
+                            >
+                              {aiSuggestions[rep._id || rep.id].action}
+                            </span>
+                          </div>
+                          <div style={{ color: "var(--text-secondary)", fontStyle: "italic" }}>
+                            "{aiSuggestions[rep._id || rep.id].justification}"
+                          </div>
+                          <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
+                            Advisory recommendation only — moderation action must still be confirmed manually by admin.
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
