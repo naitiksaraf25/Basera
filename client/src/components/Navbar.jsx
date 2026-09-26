@@ -181,6 +181,81 @@ export function Navbar({
             )}
           </Link>
 
+          {/* Role-adaptive quick-access nav links for authenticated users */}
+          {user && user.role !== "landlord" && (
+            <Link
+              to="/app/matches"
+              id="navbar-find-matches"
+              style={{
+                textDecoration: "none",
+                color: location.pathname === "/app/matches" ? "var(--accent-primary)" : "var(--text-secondary)",
+                fontSize: "0.92rem",
+                fontWeight: location.pathname === "/app/matches" ? 700 : 500,
+                position: "relative",
+                paddingBottom: "2px",
+                transition: "color 0.15s ease",
+              }}
+              onMouseEnter={(e) => {
+                if (location.pathname !== "/app/matches") e.currentTarget.style.color = "var(--text-primary)";
+              }}
+              onMouseLeave={(e) => {
+                if (location.pathname !== "/app/matches") e.currentTarget.style.color = "var(--text-secondary)";
+              }}
+            >
+              Find Matches
+              {location.pathname === "/app/matches" && (
+                <span
+                  style={{
+                    position: "absolute",
+                    bottom: -4,
+                    left: 0,
+                    right: 0,
+                    height: "2px",
+                    borderRadius: "2px",
+                    background: "var(--accent-primary)",
+                  }}
+                />
+              )}
+            </Link>
+          )}
+
+          {user && (
+            <Link
+              to="/app/chats"
+              id="navbar-active-chats"
+              style={{
+                textDecoration: "none",
+                color: location.pathname === "/app/chats" ? "var(--accent-primary)" : "var(--text-secondary)",
+                fontSize: "0.92rem",
+                fontWeight: location.pathname === "/app/chats" ? 700 : 500,
+                position: "relative",
+                paddingBottom: "2px",
+                transition: "color 0.15s ease",
+              }}
+              onMouseEnter={(e) => {
+                if (location.pathname !== "/app/chats") e.currentTarget.style.color = "var(--text-primary)";
+              }}
+              onMouseLeave={(e) => {
+                if (location.pathname !== "/app/chats") e.currentTarget.style.color = "var(--text-secondary)";
+              }}
+            >
+              Active Chats
+              {location.pathname === "/app/chats" && (
+                <span
+                  style={{
+                    position: "absolute",
+                    bottom: -4,
+                    left: 0,
+                    right: 0,
+                    height: "2px",
+                    borderRadius: "2px",
+                    background: "var(--accent-primary)",
+                  }}
+                />
+              )}
+            </Link>
+          )}
+
           {isHomePage ? (
             <>
               <a
@@ -190,20 +265,12 @@ export function Navbar({
                   color: "var(--text-secondary)",
                   fontSize: "0.92rem",
                   fontWeight: 500,
+                  transition: "color 0.15s ease",
                 }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-primary)")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-secondary)")}
               >
                 How It Works
-              </a>
-              <a
-                href="#listings"
-                style={{
-                  textDecoration: "none",
-                  color: "var(--text-secondary)",
-                  fontSize: "0.92rem",
-                  fontWeight: 500,
-                }}
-              >
-                Verified Rooms
               </a>
               <a
                 href="#matching"
@@ -212,7 +279,10 @@ export function Navbar({
                   color: "var(--text-secondary)",
                   fontSize: "0.92rem",
                   fontWeight: 500,
+                  transition: "color 0.15s ease",
                 }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-primary)")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-secondary)")}
               >
                 Compatibility Engine
               </a>
@@ -223,7 +293,10 @@ export function Navbar({
                   color: "var(--text-secondary)",
                   fontSize: "0.92rem",
                   fontWeight: 500,
+                  transition: "color 0.15s ease",
                 }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-primary)")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-secondary)")}
               >
                 Reviews
               </a>
@@ -237,20 +310,12 @@ export function Navbar({
                   color: "var(--text-secondary)",
                   fontSize: "0.92rem",
                   fontWeight: 500,
+                  transition: "color 0.15s ease",
                 }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-primary)")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-secondary)")}
               >
                 How It Works
-              </Link>
-              <Link
-                to="/#listings"
-                style={{
-                  textDecoration: "none",
-                  color: "var(--text-secondary)",
-                  fontSize: "0.92rem",
-                  fontWeight: 500,
-                }}
-              >
-                Verified Rooms
               </Link>
               <Link
                 to="/#matching"
@@ -259,9 +324,26 @@ export function Navbar({
                   color: "var(--text-secondary)",
                   fontSize: "0.92rem",
                   fontWeight: 500,
+                  transition: "color 0.15s ease",
                 }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-primary)")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-secondary)")}
               >
                 Compatibility Engine
+              </Link>
+              <Link
+                to="/#reviews"
+                style={{
+                  textDecoration: "none",
+                  color: "var(--text-secondary)",
+                  fontSize: "0.92rem",
+                  fontWeight: 500,
+                  transition: "color 0.15s ease",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-primary)")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-secondary)")}
+              >
+                Reviews
               </Link>
             </>
           )}
@@ -328,90 +410,7 @@ export function Navbar({
 
           {/* Conditional Auth Controls */}
           {user ? (
-            <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-              {/* Standalone Visible Quick-Access Links: Find Matches & Active Chats */}
-              <Link
-                to="/app/matches"
-                id="navbar-find-matches"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "0.35rem",
-                  padding: "0.45rem 0.85rem",
-                  borderRadius: "10px",
-                  fontSize: "0.88rem",
-                  fontWeight: 600,
-                  textDecoration: "none",
-                  color: location.pathname === "/app/matches"
-                    ? "var(--accent-primary)"
-                    : "var(--text-secondary)",
-                  background: location.pathname === "/app/matches"
-                    ? "var(--accent-subtle)"
-                    : "transparent",
-                  border: "1px solid var(--border-subtle)",
-                  transition: "all 0.18s ease",
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = "var(--text-primary)";
-                  e.currentTarget.style.borderColor = "var(--border-strong)";
-                  e.currentTarget.style.background = "var(--bg-surface-subtle)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = location.pathname === "/app/matches"
-                    ? "var(--accent-primary)"
-                    : "var(--text-secondary)";
-                  e.currentTarget.style.borderColor = "var(--border-subtle)";
-                  e.currentTarget.style.background = location.pathname === "/app/matches"
-                    ? "var(--accent-subtle)"
-                    : "transparent";
-                }}
-              >
-                Find Matches
-              </Link>
-
-              <Link
-                to="/app/chats"
-                id="navbar-active-chats"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "0.35rem",
-                  padding: "0.45rem 0.85rem",
-                  borderRadius: "10px",
-                  fontSize: "0.88rem",
-                  fontWeight: 600,
-                  textDecoration: "none",
-                  color: location.pathname === "/app/chats"
-                    ? "var(--accent-primary)"
-                    : "var(--text-secondary)",
-                  background: location.pathname === "/app/chats"
-                    ? "var(--accent-subtle)"
-                    : "transparent",
-                  border: "1px solid var(--border-subtle)",
-                  transition: "all 0.18s ease",
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = "var(--text-primary)";
-                  e.currentTarget.style.borderColor = "var(--border-strong)";
-                  e.currentTarget.style.background = "var(--bg-surface-subtle)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = location.pathname === "/app/chats"
-                    ? "var(--accent-primary)"
-                    : "var(--text-secondary)";
-                  e.currentTarget.style.borderColor = "var(--border-subtle)";
-                  e.currentTarget.style.background = location.pathname === "/app/chats"
-                    ? "var(--accent-subtle)"
-                    : "transparent";
-                }}
-              >
-                Active Chats
-              </Link>
-
-              {/* Logged-In User Profile Pill & Dropdown */}
-              <div style={{ position: "relative" }} ref={dropdownRef}>
+            <div style={{ position: "relative" }} ref={dropdownRef}>
               <button
                 id="navbar-user-btn"
                 onClick={() => setUserDropdownOpen(!userDropdownOpen)}
@@ -644,8 +643,7 @@ export function Navbar({
                 </div>
               )}
             </div>
-          </div>
-        ) : (
+          ) : (
             /* Logged-Out Visitor CTAs */
             <>
               <button
