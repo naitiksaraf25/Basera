@@ -1663,7 +1663,7 @@ export function Homepage({
               gap: "2rem",
             }}
           >
-            {filteredListings.map((listing) => (
+            {filteredListings.slice(0, 4).map((listing) => (
               <div
                 key={listing.id}
                 className="basera-card"
@@ -1913,6 +1913,36 @@ export function Homepage({
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* View All Verified Rooms CTA */}
+          <div style={{ textAlign: "center", marginTop: "3.2rem" }}>
+            <button
+              id="view-all-verified-rooms-btn"
+              onClick={() => {
+                if (selectedCity !== "All" && CITY_SLUGS[selectedCity]) {
+                  navigate(`/rooms/${CITY_SLUGS[selectedCity]}`);
+                } else {
+                  navigate("/cities");
+                }
+              }}
+              className="pill-btn-primary"
+              style={{
+                padding: "0.95rem 2.4rem",
+                fontSize: "1.05rem",
+                fontWeight: 700,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.6rem",
+                boxShadow: "0 6px 24px rgba(10, 88, 246, 0.35)",
+                cursor: "pointer",
+                borderRadius: "9999px",
+                transition: "all 0.25s ease",
+              }}
+            >
+              <span>View All Verified Rooms</span>
+              <span aria-hidden="true" style={{ fontSize: "1.2rem", lineHeight: 1 }}>&rarr;</span>
+            </button>
           </div>
         </div>
       </section>
