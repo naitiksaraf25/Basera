@@ -1,29 +1,49 @@
 <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="baseraBlueGrad" x1="3" y1="4" x2="29" y2="28" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stopColor="#0A58F6"/>
-      <stop offset="60%" stopColor="#2563EB"/>
-      <stop offset="100%" stopColor="#38BDF8"/>
+    <linearGradient id="baseraRoofGrad" x1="3" y1="5" x2="29" y2="17" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0A58F6" />
+      <stop offset="60%" stop-color="#2563EB" />
+      <stop offset="100%" stop-color="#38BDF8" />
     </linearGradient>
-    <linearGradient id="baseraOrangeGrad" x1="10" y1="12" x2="22" y2="27" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stopColor="#FF8A00"/>
-      <stop offset="100%" stopColor="#EA580C"/>
+
+    <linearGradient id="baseraHearthGrad" x1="9" y1="12" x2="23" y2="28" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F97316" />
+      <stop offset="100%" stop-color="#EA580C" />
+    </linearGradient>
+
+    <linearGradient id="baseraSparkGrad" x1="13" y1="17" x2="19" y2="23" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFB703" />
+      <stop offset="100%" stop-color="#F97316" />
     </linearGradient>
   </defs>
 
-  <!-- Background Shield/Pebble for contrast in light/dark tabs -->
-  <rect width="32" height="32" rx="8" fill="#0F172A" />
+  <!-- High-contrast rounded shield background for light and dark browser tab chrome -->
+  <rect width="32" height="32" rx="8" fill="#0B0F19" />
+  <rect x="0.5" y="0.5" width="31" height="31" rx="7.5" stroke="rgba(255, 255, 255, 0.12)" />
 
-  <!-- Sweeping Shelter Roof Arch -->
-  <path d="M5 14.5L16 4.5L27 14.5" stroke="url(#baseraBlueGrad)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-  
-  <!-- Twin Companion Nodes (Two Roommates under one roof) -->
-  <circle cx="11.5" cy="13.5" r="2.2" fill="#38BDF8"/>
-  <circle cx="20.5" cy="13.5" r="2.2" fill="#FF8A00"/>
+  <!-- 1. Primary Shelter Gable Roofline (Clean, bold, aerodynamic) -->
+  <path
+    d="M4.5 15L16 4.8L27.5 15"
+    stroke="url(#baseraRoofGrad)"
+    stroke-width="3.2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
 
-  <!-- Interlocking Connection Hearth Arch -->
-  <path d="M8 24.5C9 18.5 13 17 16 17C19 17 23 18.5 24 24.5" stroke="#FFFFFF" stroke-opacity="0.85" stroke-width="2.2" stroke-linecap="round"/>
+  <!-- 2. Welcoming Inner Hearth Arch / Home Structure -->
+  <path
+    d="M10 26.5V18.2C10 14.8 12.7 12.2 16 12.2C19.3 12.2 22 14.8 22 18.2V26.5"
+    stroke="url(#baseraHearthGrad)"
+    stroke-width="2.8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
 
-  <!-- Central Doorway / Welcome Portal -->
-  <path d="M13.5 26.5V21.5C13.5 20.1 14.6 19 16 19C17.4 19 18.5 20.1 18.5 21.5V26.5" stroke="url(#baseraOrangeGrad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- 3. Central Hearth Spark / Living Dot -->
+  <circle
+    cx="16"
+    cy="20.2"
+    r="2.4"
+    fill="url(#baseraSparkGrad)"
+  />
 </svg>
