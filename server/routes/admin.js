@@ -1,11 +1,11 @@
 import express from "express";
 import { requireAdmin } from "../middleware/auth.js";
 import Report from "../models/Report.js";
-import { MongoClient, ObjectId } from "mongodb";
 import { getAiModerationSuggestion } from "../services/aiModerator.js";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+import { findUser, updateUser, getUserCollection, ObjectId } from "../db.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -13,56 +13,9 @@ dotenv.config({ path: path.join(__dirname, "../../.env") });
 dotenv.config();
 
 const router = express.Router();
-const MONGODB_URI =
-  process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/basera";
 
 // Protect ALL routes in this router with requireAdmin
 router.use(requireAdmin);
-
-/**
- * Helper to update user record in BetterAuth user collection directly
- */
-async function updateUser(filter, updateFields) {
-  const client = new MongoClient(MONGODB_URI);
-  await client.connect();
-  const db = client.db();
-
-  const collections = await db.listCollections().toArray();
-  const collectionName = collections.some((c) => c.name === "user")
-    ? "user"
-    : "users";
-
-  await db.collection(collectionName).updateOne(filter, { $set: updateFields });
-  const updatedUser = await db.collection(collectionName).findOne(filter);
-  await client.close();
-
-  if (updatedUser && !updatedUser.id) {
-    updatedUser.id = updatedUser._id;
-  }
-  return updatedUser;
-}
-
-/**
- * Helper to find user in BetterAuth user collection
- */
-async function findUser(filter) {
-  const client = new MongoClient(MONGODB_URI);
-  await client.connect();
-  const db = client.db();
-
-  const collections = await db.listCollections().toArray();
-  const collectionName = collections.some((c) => c.name === "user")
-    ? "user"
-    : "users";
-
-  const userDoc = await db.collection(collectionName).findOne(filter);
-  await client.close();
-
-  if (userDoc && !userDoc.id) {
-    userDoc.id = userDoc._id;
-  }
-  return userDoc;
-}
 
 /**
  * POST /api/admin/promote
@@ -189,19 +142,11 @@ router.post("/reports/:id/action", async (req, res) => {
         acknowledgedAt: null,
       };
 
-      const client = new MongoClient(MONGODB_URI);
-      await client.connect();
-      const db = client.db();
-      const collections = await db.listCollections().toArray();
-      const collectionName = collections.some((c) => c.name === "user")
-        ? "user"
-        : "users";
-
-      await db.collection(collectionName).updateOne(filter, {
+      const col = await getUserCollection();
+      await col.updateOne(filter, {
         $push: { warnings: newWarning },
         $set: { updatedAt: new Date().toISOString() },
       });
-      await client.close();
     }
 
     // If action is suspend or ban, update target user's accountStatus
@@ -297,21 +242,10 @@ router.post("/reports/:reportId/ai-suggest", async (req, res) => {
  */
 router.get("/verifications", async (req, res) => {
   try {
-    const client = new MongoClient(MONGODB_URI);
-    await client.connect();
-    const db = client.db();
-
-    const collections = await db.listCollections().toArray();
-    const collectionName = collections.some((c) => c.name === "user")
-      ? "user"
-      : "users";
-
-    const pendingUsers = await db
-      .collection(collectionName)
+    const col = await getUserCollection();
+    const pendingUsers = await col
       .find({ "platformVerification.status": "pending" })
       .toArray();
-
-    await client.close();
 
     const formattedUsers = pendingUsers.map((u) => {
       if (!u.id) u.id = u._id;

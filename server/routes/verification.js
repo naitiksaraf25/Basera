@@ -2,38 +2,21 @@ import express from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import os from "os";
 import crypto from "crypto";
 import { fileURLToPath } from "url";
-import { MongoClient } from "mongodb";
-import dotenv from "dotenv";
 import { requireAuth } from "../middleware/auth.js";
 import { COLLEGE_ALLOWLIST } from "./onboarding.js";
+import { getMongoClientAndDb } from "../db.js";
+import { saveUploadedFile } from "../services/storage.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.join(__dirname, "../../.env") });
-dotenv.config();
 
 const router = express.Router();
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/basera";
 
-// Ensure uploads/ids directory exists privately
-const uploadDir = path.join(__dirname, "../uploads/ids");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-// Multer storage setup for private landlord ID uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase() || ".png";
-    const uniqueName = `id_${req.user.id}_${Date.now()}${ext}`;
-    cb(null, uniqueName);
-  },
-});
+// Multer memory storage setup (zero reliance on ephemeral disk / tmp)
+const storage = multer.memoryStorage();
 
 const upload = multer({
   storage,
@@ -49,23 +32,22 @@ const upload = multer({
   },
 });
 
-// DB helper
+// Cached DB helper
 async function getDb() {
-  const client = new MongoClient(MONGODB_URI);
-  await client.connect();
-  return { client, db: client.db() };
+  return getMongoClientAndDb();
 }
 
 /**
  * POST /api/verification/college-email
- * Submits a secondary college email address and generates a token verification link.
+ * Generates email verification token for student seekers.
  */
 router.post("/college-email", requireAuth, async (req, res) => {
   try {
     const { collegeEmail } = req.body;
-    if (!collegeEmail || typeof collegeEmail !== "string" || !collegeEmail.includes("@")) {
+
+    if (!collegeEmail || !collegeEmail.includes("@")) {
       return res.status(400).json({
-        error: "Invalid Email",
+        error: "Bad Request",
         message: "A valid college email address is required.",
       });
     }
@@ -84,7 +66,7 @@ router.post("/college-email", requireAuth, async (req, res) => {
     const token = crypto.randomBytes(32).toString("hex");
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-    const { client, db } = await getDb();
+    const { db } = await getDb();
     await db.collection("college_verifications").insertOne({
       userId: req.user.id,
       userEmail: req.user.email,
@@ -93,9 +75,8 @@ router.post("/college-email", requireAuth, async (req, res) => {
       expiresAt,
       createdAt: new Date(),
     });
-    await client.close();
 
-    const verifyUrl = `http://localhost:5000/api/verification/verify-college-email?token=${token}`;
+    const verifyUrl = `/api/verification/verify-college-email?token=${token}`;
 
     console.log("==================================================");
     console.log(`[DEV COLLEGE EMAIL SENDER] College Email Verification for user ${req.user.id}`);
@@ -126,16 +107,14 @@ router.get("/verify-college-email", async (req, res) => {
       return res.status(400).send("Verification token is required.");
     }
 
-    const { client, db } = await getDb();
+    const { db } = await getDb();
     const record = await db.collection("college_verifications").findOne({ token });
 
     if (!record) {
-      await client.close();
       return res.status(400).send("Invalid or expired verification token.");
     }
 
     if (new Date() > new Date(record.expiresAt)) {
-      await client.close();
       return res.status(400).send("Verification token has expired. Please request a new link.");
     }
 
@@ -160,7 +139,6 @@ router.get("/verify-college-email", async (req, res) => {
     );
 
     await db.collection("college_verifications").deleteOne({ _id: record._id });
-    await client.close();
 
     const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
     return res.redirect(`${clientUrl}?verification=success`);
@@ -185,8 +163,17 @@ router.post("/landlord-id", requireAuth, (req, res) => {
     }
 
     try {
-      const documentPath = `/api/documents/${req.file.filename}`;
-      const { client, db } = await getDb();
+      const savedDoc = await saveUploadedFile({
+        buffer: req.file.buffer,
+        originalname: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size,
+        category: "documents",
+        userId: req.user.id,
+      });
+
+      const documentPath = savedDoc.url;
+      const { db } = await getDb();
       const collections = await db.listCollections().toArray();
       const collectionName = collections.some((c) => c.name === "user") ? "user" : "users";
 
@@ -209,13 +196,12 @@ router.post("/landlord-id", requireAuth, (req, res) => {
       );
 
       const updatedUser = await db.collection(collectionName).findOne(filter);
-      await client.close();
 
       return res.status(200).json({
         message: "Government ID uploaded successfully. Verification is pending admin review.",
         documentUrl: documentPath,
         user: updatedUser,
-        note: "Landlord verification status is currently set to 'pending'. Admin review UI will be built in a future prompt.",
+        note: "Landlord verification status is currently set to 'pending'.",
       });
     } catch (dbErr) {
       console.error("[Landlord ID DB Error]:", dbErr);

@@ -2,16 +2,29 @@
   "name": "roomiematch",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
+  "packageManager": "npm@11.11.0",
   "workspaces": [
     "server",
     "client"
   ],
   "scripts": {
+    "build": "npm run build --workspace=client",
+    "build:client": "npm run build --workspace=client",
     "dev": "concurrently \"npm run dev --workspace=server\" \"npm run dev --workspace=client\"",
     "dev:server": "npm run dev --workspace=server",
     "dev:client": "npm run dev --workspace=client",
-    "start:server": "npm run start --workspace=server",
-    "build:client": "npm run build --workspace=client"
+    "start:server": "npm run start --workspace=server"
+  },
+  "dependencies": {
+    "better-auth": "^1.1.21",
+    "cloudinary": "^2.11.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mongodb": "^6.13.0",
+    "mongoose": "^8.10.1",
+    "multer": "^1.4.5-lts.1"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

@@ -1,49 +1,42 @@
-import dns from "dns";
-
-// Use public DNS resolvers for reliable MongoDB Atlas SRV resolution on Windows
-try {
-  dns.setServers(["8.8.8.8", "1.1.1.1"]);
-} catch (e) {
-  // Ignore if dns override fails in specific restricted environments
-}
-
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
-import { MongoClient } from "mongodb";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+import { getMongoClientAndDb } from "./db.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, "../.env") });
+dotenv.config({ path: path.join(__dirname, "../../.env") });
 dotenv.config();
 
-const MONGODB_URI =
-  process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/basera";
-let client;
-try {
-  client = new MongoClient(MONGODB_URI, { serverSelectionTimeoutMS: 10000 });
-  await client.connect();
-  console.log(
-    `[Auth DB] Successfully connected to primary MongoDB at ${MONGODB_URI}`,
-  );
-} catch (err) {
-  console.error(
-    `[Auth DB Error] Failed to connect to primary MONGODB_URI (${err.message}). Retrying...`,
-  );
-  // Retry connection once with explicit DNS resolvers
-  dns.setServers(["8.8.8.8", "1.1.1.1"]);
-  client = new MongoClient(MONGODB_URI, { serverSelectionTimeoutMS: 10000 });
-  await client.connect();
-  console.log(
-    `[Auth DB] Successfully connected on retry to MongoDB at ${MONGODB_URI}`,
-  );
+// Connect using cached MongoClient for serverless compatibility
+const { db } = await getMongoClientAndDb();
+
+const baseURL =
+  process.env.BETTER_AUTH_URL ||
+  (process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:5000");
+
+const trustedOrigins = [
+  process.env.CLIENT_URL || "http://localhost:5173",
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "http://localhost:5000",
+  "http://127.0.0.1:5000",
+  "http://localhost:5173",
+];
+if (process.env.VERCEL_URL) {
+  trustedOrigins.push(`https://${process.env.VERCEL_URL}`);
 }
-const db = client.db();
+if (process.env.BETTER_AUTH_URL) {
+  trustedOrigins.push(process.env.BETTER_AUTH_URL);
+}
 
 export const auth = betterAuth({
-  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:5000",
+  baseURL,
   secret: process.env.BETTER_AUTH_SECRET,
   database: mongodbAdapter(db, {
     transaction: false, // Disabled for standalone MongoDB compatibility
@@ -94,5 +87,5 @@ export const auth = betterAuth({
       },
     },
   },
-  trustedOrigins: [process.env.CLIENT_URL || "http://localhost:5173"],
+  trustedOrigins,
 });

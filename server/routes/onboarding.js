@@ -1,17 +1,8 @@
 import express from "express";
 import { requireAuth } from "../middleware/auth.js";
-import { MongoClient } from "mongodb";
-import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.join(__dirname, "../../.env") });
-dotenv.config();
+import { updateUser } from "../db.js";
 
 const router = express.Router();
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/basera";
 
 // Placeholder Allowlist of College Domains for Launch City
 export const COLLEGE_ALLOWLIST = [
@@ -29,28 +20,9 @@ export const COLLEGE_ALLOWLIST = [
 
 // Helper to update user in MongoDB directly
 async function updateUserRecord(user, updateFields) {
-  const client = new MongoClient(MONGODB_URI);
-  await client.connect();
-  const db = client.db();
-  
-  const collections = await db.listCollections().toArray();
-  const collectionName = collections.some(c => c.name === "user") ? "user" : "users";
-
   const userId = user.id || user._id;
   const filter = { $or: [{ _id: userId }, { id: userId }, { email: user.email }] };
-
-  await db.collection(collectionName).updateOne(
-    filter,
-    { $set: updateFields }
-  );
-
-  const updatedUser = await db.collection(collectionName).findOne(filter);
-  await client.close();
-
-  if (updatedUser && !updatedUser.id) {
-    updatedUser.id = updatedUser._id;
-  }
-  return updatedUser;
+  return updateUser(filter, updateFields);
 }
 
 /**

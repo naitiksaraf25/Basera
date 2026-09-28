@@ -1,18 +1,8 @@
 import express from "express";
 import { requireAuth } from "../middleware/auth.js";
-import { MongoClient, ObjectId } from "mongodb";
-import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.join(__dirname, "../../.env") });
-dotenv.config();
+import { getUserCollection, ObjectId } from "../db.js";
 
 const router = express.Router();
-const MONGODB_URI =
-  process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/basera";
 
 /**
  * POST /api/user/acknowledge-warning
@@ -33,14 +23,7 @@ router.post("/acknowledge-warning", requireAuth, async (req, res) => {
       });
     }
 
-    const client = new MongoClient(MONGODB_URI);
-    await client.connect();
-    const db = client.db();
-
-    const collections = await db.listCollections().toArray();
-    const collectionName = collections.some((c) => c.name === "user")
-      ? "user"
-      : "users";
+    const col = await getUserCollection();
 
     const filterConditions = [{ _id: currentUserId }, { id: currentUserId }];
     if (ObjectId.isValid(currentUserId)) {
@@ -52,10 +35,9 @@ router.post("/acknowledge-warning", requireAuth, async (req, res) => {
       $and: [{ $or: filterConditions }, { "warnings.id": warningId }],
     };
 
-    const userDoc = await db.collection(collectionName).findOne(userFilter);
+    const userDoc = await col.findOne(userFilter);
 
     if (!userDoc) {
-      await client.close();
       return res.status(404).json({
         error: "Not Found",
         message: "Warning not found or does not belong to current user.",
@@ -65,7 +47,7 @@ router.post("/acknowledge-warning", requireAuth, async (req, res) => {
     const acknowledgedAt = new Date().toISOString();
 
     // Update specific warning element in user's warnings array
-    await db.collection(collectionName).updateOne(
+    await col.updateOne(
       {
         $or: filterConditions,
         "warnings.id": warningId,
@@ -76,13 +58,12 @@ router.post("/acknowledge-warning", requireAuth, async (req, res) => {
           "warnings.$.acknowledgedAt": acknowledgedAt,
           updatedAt: acknowledgedAt,
         },
-      },
+      }
     );
 
-    const updatedUser = await db.collection(collectionName).findOne({
+    const updatedUser = await col.findOne({
       $or: filterConditions,
     });
-    await client.close();
 
     if (updatedUser && !updatedUser.id) {
       updatedUser.id = updatedUser._id;

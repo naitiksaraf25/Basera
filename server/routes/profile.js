@@ -2,37 +2,21 @@ import express from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import os from "os";
 import { fileURLToPath } from "url";
-import { MongoClient } from "mongodb";
-import dotenv from "dotenv";
 import { requireAuth } from "../middleware/auth.js";
 import LifestyleProfile from "../models/LifestyleProfile.js";
 import LandlordListing from "../models/LandlordListing.js";
+import { getUserCollection } from "../db.js";
+import { saveUploadedFile } from "../services/storage.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.join(__dirname, "../../.env") });
-dotenv.config();
 
 const router = express.Router();
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/basera";
 
-// Photo storage directory
-const photosDir = path.join(__dirname, "../uploads/photos");
-if (!fs.existsSync(photosDir)) {
-  fs.mkdirSync(photosDir, { recursive: true });
-}
-
-const photoStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, photosDir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase() || ".png";
-    const prefix = req.user?.id || "user";
-    cb(null, `photo_${prefix}_${Date.now()}_${Math.round(Math.random() * 1e4)}${ext}`);
-  },
-});
+// Multer memory storage setup (zero reliance on ephemeral disk / tmp)
+const photoStorage = multer.memoryStorage();
 
 const uploadPhoto = multer({
   storage: photoStorage,
@@ -119,7 +103,15 @@ router.post("/lifestyle", requireAuth, (req, res) => {
 
       let photoUrl = req.body.existingPhotoUrl || "";
       if (req.file) {
-        photoUrl = `/api/photos/${req.file.filename}`;
+        const savedPhoto = await saveUploadedFile({
+          buffer: req.file.buffer,
+          originalname: req.file.originalname,
+          mimetype: req.file.mimetype,
+          size: req.file.size,
+          category: "photos",
+          userId: req.user.id,
+        });
+        photoUrl = savedPhoto.url;
       }
 
       const updateData = {
@@ -237,7 +229,18 @@ router.post("/landlord-listing", requireAuth, (req, res) => {
       }
 
       if (req.files && req.files.length > 0) {
-        const newUrls = req.files.map((f) => `/api/photos/${f.filename}`);
+        const newUrls = await Promise.all(
+          req.files.map((f) =>
+            saveUploadedFile({
+              buffer: f.buffer,
+              originalname: f.originalname,
+              mimetype: f.mimetype,
+              size: f.size,
+              category: "photos",
+              userId: req.user.id,
+            }).then((res) => res.url)
+          )
+        );
         photoUrls = [...photoUrls, ...newUrls];
       }
 
@@ -294,19 +297,11 @@ router.get("/search-residents", requireAuth, async (req, res) => {
 
     const targetEmail = rawEmail.trim().toLowerCase();
 
-    const client = new MongoClient(MONGODB_URI);
-    await client.connect();
-    const db = client.db();
-
-    const collections = await db.listCollections().toArray();
-    const collectionName = collections.some((c) => c.name === "user") ? "user" : "users";
-
-    const user = await db.collection(collectionName).findOne({
+    const col = await getUserCollection();
+    const user = await col.findOne({
       email: targetEmail,
       role: "resident",
     });
-
-    await client.close();
 
     if (!user) {
       return res.status(404).json({

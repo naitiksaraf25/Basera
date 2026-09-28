@@ -1,21 +1,12 @@
 import express from "express";
-import { MongoClient } from "mongodb";
-import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "url";
 import { requireVerified } from "../middleware/auth.js";
 import MatchRequest from "../models/MatchRequest.js";
 import LifestyleProfile from "../models/LifestyleProfile.js";
 import LandlordListing from "../models/LandlordListing.js";
 import { computeMatches } from "../services/matchingEngine.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.join(__dirname, "../../.env") });
-dotenv.config();
+import { getUserCollection } from "../db.js";
 
 const router = express.Router();
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/basera";
 
 /**
  * Helper to compare criteria objects for 24h caching
@@ -52,15 +43,8 @@ function isSameCriteria(c1, c2) {
  * Helper to retrieve active & verified user records from BetterAuth collection
  */
 async function getVerifiedUsersMap() {
-  const client = new MongoClient(MONGODB_URI);
-  await client.connect();
-  const db = client.db();
-
-  const collections = await db.listCollections().toArray();
-  const collectionName = collections.some((c) => c.name === "user") ? "user" : "users";
-
-  const rawUsers = await db.collection(collectionName).find().toArray();
-  await client.close();
+  const col = await getUserCollection();
+  const rawUsers = await col.find().toArray();
 
   const verifiedUserMap = new Map();
   for (const u of rawUsers) {
