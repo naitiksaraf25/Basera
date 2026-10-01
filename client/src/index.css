@@ -67,10 +67,12 @@
   /* Sticky Navbar Frosted Glass */
   --nav-glass-bg: rgba(247, 249, 253, 0.88);
   --nav-border: rgba(24, 32, 48, 0.06);
+  color-scheme: light;
 }
 
 /* Dark Mode Overrides */
 [data-theme="dark"] {
+  color-scheme: dark;
   --bg-canvas: #0b0f19;
   --bg-surface: #131b2e;
   --bg-surface-elevated: #1b253d;
@@ -120,6 +122,35 @@
 
   --nav-glass-bg: rgba(11, 15, 25, 0.85);
   --nav-border: rgba(255, 255, 255, 0.07);
+}
+
+/* Native Form Controls & Dark Mode Select / Option / Optgroup Normalization */
+select {
+  color-scheme: light;
+}
+
+[data-theme="dark"] select {
+  color-scheme: dark;
+}
+
+select option,
+select optgroup {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+}
+
+[data-theme="dark"] select option,
+[data-theme="dark"] select optgroup {
+  background-color: #131b2e !important;
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] select option:checked,
+[data-theme="dark"] select option:hover,
+[data-theme="dark"] select option:focus {
+  background-color: #1e293b !important;
+  color: #60a5fa !important;
 }
 
 /* Reset & Document Flow */
@@ -826,6 +857,26 @@ body {
   outline: none;
   width: 100%;
   cursor: pointer;
+}
+
+.search-input-box select option,
+.search-input-box select optgroup {
+  background-color: #ffffff;
+  color: #182030;
+  font-size: 0.92rem;
+  padding: 8px 12px;
+}
+
+[data-theme="dark"] .search-input-box select option,
+[data-theme="dark"] .search-input-box select optgroup {
+  background-color: #131b2e !important;
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .search-input-box select optgroup {
+  font-weight: 700;
+  color: #94a3b8 !important;
+  background-color: #0b0f19 !important;
 }
 
 /* Continuous Pill Search Bar (Legacy fallback) */

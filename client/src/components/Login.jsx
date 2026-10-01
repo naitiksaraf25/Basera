@@ -36,9 +36,14 @@ export function Login({ onLoginSuccess, onToggleForgotPassword }) {
     setGoogleLoading(true);
     setError(null);
     try {
+      const callbackOrigin =
+        typeof window !== "undefined" && window.location.origin
+          ? window.location.origin
+          : "/";
+
       const { data, error: apiError } = await authClient.signIn.social({
         provider: "google",
-        callbackURL: "http://localhost:5173",
+        callbackURL: callbackOrigin,
       });
 
       if (apiError) {

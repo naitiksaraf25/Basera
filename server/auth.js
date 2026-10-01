@@ -14,26 +14,59 @@ dotenv.config();
 // Connect using cached MongoClient for serverless compatibility
 const { db } = await getMongoClientAndDb();
 
-const baseURL =
-  process.env.BETTER_AUTH_URL ||
-  (process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:5000");
+const resolveBaseURL = () => {
+  const raw =
+    process.env.BETTER_AUTH_URL ||
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "http://localhost:5000");
 
-const trustedOrigins = [
-  process.env.CLIENT_URL || "http://localhost:5173",
+  try {
+    const parsed = new URL(raw.startsWith("http") ? raw : `https://${raw}`);
+    return parsed.origin;
+  } catch {
+    return "http://localhost:5000";
+  }
+};
+
+const baseURL = resolveBaseURL();
+
+const rawOrigins = [
+  process.env.CLIENT_URL,
+  process.env.BETTER_AUTH_URL,
+  process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : null,
+  process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
+  "https://basera-server.vercel.app",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
   "http://localhost:3000",
   "http://127.0.0.1:3000",
   "http://localhost:5000",
   "http://127.0.0.1:5000",
-  "http://localhost:5173",
 ];
-if (process.env.VERCEL_URL) {
-  trustedOrigins.push(`https://${process.env.VERCEL_URL}`);
-}
-if (process.env.BETTER_AUTH_URL) {
-  trustedOrigins.push(process.env.BETTER_AUTH_URL);
-}
+
+const trustedOrigins = Array.from(
+  new Set(
+    rawOrigins
+      .filter(Boolean)
+      .map((origin) => {
+        try {
+          const parsed = new URL(
+            origin.startsWith("http") ? origin : `https://${origin}`
+          );
+          return parsed.origin;
+        } catch {
+          return origin;
+        }
+      })
+  )
+);
+// Support Vercel preview deployment URLs
+trustedOrigins.push("https://*.vercel.app");
 
 export const auth = betterAuth({
   baseURL,
@@ -64,6 +97,7 @@ export const auth = betterAuth({
       clientId: process.env.GOOGLE_CLIENT_ID || "placeholder_google_client_id",
       clientSecret:
         process.env.GOOGLE_CLIENT_SECRET || "placeholder_google_client_secret",
+      newUserURL: "/app/onboarding",
     },
   },
   user: {
@@ -71,6 +105,7 @@ export const auth = betterAuth({
       role: {
         type: "string",
         required: false,
+        defaultValue: "",
       },
       accountStatus: {
         type: "string",
@@ -80,10 +115,14 @@ export const auth = betterAuth({
       platformVerification: {
         type: "object",
         required: false,
+        defaultValue: {
+          status: "unverified",
+        },
       },
       warnings: {
         type: "object",
         required: false,
+        defaultValue: [],
       },
     },
   },

@@ -22,9 +22,15 @@ export function Signup({ onSignupSuccess, audience, onChangeAudience }) {
     setGoogleLoading(true);
     setError(null);
     try {
+      const callbackOrigin =
+        typeof window !== "undefined" && window.location.origin
+          ? window.location.origin
+          : "";
+      const callbackURL = callbackOrigin ? `${callbackOrigin}/app/onboarding` : "/app/onboarding";
+
       const { data, error: apiError } = await authClient.signIn.social({
         provider: "google",
-        callbackURL: "http://localhost:5173",
+        callbackURL,
       });
 
       if (apiError) {
