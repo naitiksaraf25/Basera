@@ -52,6 +52,22 @@ const landlordListingSchema = new mongoose.Schema(
       required: [true, "Gender preference is required"],
       enum: ["male_only", "female_only", "any"],
     },
+    cleanliness: {
+      type: Number,
+      min: 1,
+      max: 5,
+      default: 4,
+    },
+    foodPreference: {
+      type: String,
+      enum: ["vegetarian", "vegan", "non_vegetarian", "eggetarian", "any"],
+      default: "any",
+    },
+    sleepSchedule: {
+      type: String,
+      enum: ["early_bird", "night_owl", "flexible"],
+      default: "flexible",
+    },
     houseRules: {
       type: houseRulesSchema,
       required: true,

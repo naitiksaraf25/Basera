@@ -182,7 +182,7 @@ router.post("/landlord-listing", requireAuth, (req, res) => {
     }
 
     try {
-      const { city, locality, rent, roomType, genderPreference, houseRules, linkedTenantIds, status } = req.body;
+      const { city, locality, rent, roomType, genderPreference, houseRules, linkedTenantIds, status, cleanliness, foodPreference, sleepSchedule } = req.body;
 
       let parsedRules = houseRules;
       if (typeof houseRules === "string") {
@@ -251,6 +251,9 @@ router.post("/landlord-listing", requireAuth, (req, res) => {
         rent: Number(rent),
         roomType,
         genderPreference,
+        cleanliness: cleanliness ? Number(cleanliness) : 4,
+        foodPreference: foodPreference || "any",
+        sleepSchedule: sleepSchedule || (parsedRules.curfew === "10_pm" || parsedRules.curfew === "11_pm" ? "early_bird" : "flexible"),
         houseRules: {
           smokingAllowed: Boolean(parsedRules.smokingAllowed),
           drinkingAllowed: Boolean(parsedRules.drinkingAllowed),

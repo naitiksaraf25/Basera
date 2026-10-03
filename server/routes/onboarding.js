@@ -1,22 +1,11 @@
 import express from "express";
 import { requireAuth } from "../middleware/auth.js";
 import { updateUser } from "../db.js";
+import { verifyCollegeDomain, COLLEGE_ALLOWLIST } from "../services/collegeVerification.js";
 
 const router = express.Router();
 
-// Placeholder Allowlist of College Domains for Launch City
-export const COLLEGE_ALLOWLIST = [
-  "stanford.edu",
-  "mit.edu",
-  "harvard.edu",
-  "berkeley.edu",
-  "nyu.edu",
-  "iit.ac.in",
-  "du.ac.in",
-  "bits-pilani.ac.in",
-  "college.edu",
-  "university.edu"
-];
+export { COLLEGE_ALLOWLIST };
 
 // Helper to update user in MongoDB directly
 async function updateUserRecord(user, updateFields) {
@@ -46,19 +35,24 @@ router.post("/role", requireAuth, async (req, res) => {
     let platformVerification = req.user.platformVerification || { status: "pending" };
 
     if (role === "seeker" || role === "resident") {
-      const isAutoVerified = COLLEGE_ALLOWLIST.some((domain) => emailDomain === domain || emailDomain.endsWith("." + domain));
-      if (isAutoVerified) {
+      const verificationCheck = await verifyCollegeDomain(email);
+      if (verificationCheck.isVerified) {
         platformVerification = {
           status: "verified",
-          method: "college_email",
+          method: verificationCheck.method,
           collegeEmail: email,
+          institutionName: verificationCheck.institutionName || null,
           verifiedAt: new Date().toISOString(),
+          notes: verificationCheck.reason,
         };
       } else {
         platformVerification = {
           status: "pending",
           method: "college_email",
-          collegeEmail: null,
+          collegeEmail: emailDomain ? email : null,
+          institutionName: verificationCheck.institutionName || null,
+          notes: verificationCheck.reason || "Domain queued for manual admin verification review.",
+          submittedAt: new Date().toISOString(),
         };
       }
     } else if (role === "landlord") {

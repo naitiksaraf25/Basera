@@ -6,8 +6,8 @@ import os from "os";
 import crypto from "crypto";
 import { fileURLToPath } from "url";
 import { requireAuth } from "../middleware/auth.js";
-import { COLLEGE_ALLOWLIST } from "./onboarding.js";
-import { getMongoClientAndDb } from "../db.js";
+import { verifyCollegeDomain, COLLEGE_ALLOWLIST } from "../services/collegeVerification.js";
+import { getMongoClientAndDb, updateUser } from "../db.js";
 import { saveUploadedFile } from "../services/storage.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -52,43 +52,74 @@ router.post("/college-email", requireAuth, async (req, res) => {
       });
     }
 
-    const domain = collegeEmail.split("@")[1].toLowerCase();
-    const isDomainAllowed = COLLEGE_ALLOWLIST.some((d) => domain === d || domain.endsWith("." + d));
+    const verificationCheck = await verifyCollegeDomain(collegeEmail);
 
-    if (!isDomainAllowed) {
-      return res.status(400).json({
-        error: "Domain Not Allowed",
-        message: `The domain '@${domain}' is not in the launch city college allowlist. Please use a recognized college email.`,
-        allowlist: COLLEGE_ALLOWLIST,
+    const { db } = await getDb();
+
+    if (verificationCheck.isVerified) {
+      const token = crypto.randomBytes(32).toString("hex");
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+      await db.collection("college_verifications").insertOne({
+        userId: req.user.id || req.user._id,
+        userEmail: req.user.email,
+        collegeEmail,
+        institutionName: verificationCheck.institutionName || null,
+        verificationMethod: verificationCheck.method,
+        status: "verified_domain",
+        token,
+        expiresAt,
+        createdAt: new Date(),
+      });
+
+      const verifyUrl = `/api/verification/verify-college-email?token=${token}`;
+
+      console.log("==================================================");
+      console.log(`[DEV COLLEGE EMAIL SENDER] College Email Verification for user ${req.user.id || req.user._id}`);
+      console.log(`Submitted College Email: ${collegeEmail} (${verificationCheck.method} - ${verificationCheck.institutionName || ""})`);
+      console.log(`Verification Link: ${verifyUrl}`);
+      console.log("==================================================");
+
+      return res.status(200).json({
+        success: true,
+        status: "verified",
+        message: "Recognized educational institution! Verification link generated.",
+        verifyUrl,
+        token,
+        institution: verificationCheck.institutionName,
+        method: verificationCheck.method,
+        notice: "In local development, inspect your server console for the verification link.",
       });
     }
 
-    const token = crypto.randomBytes(32).toString("hex");
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-
-    const { db } = await getDb();
+    // Unrecognized or unconfirmed domain -> Queue for manual admin review (DO NOT HARD REJECT!)
     await db.collection("college_verifications").insertOne({
-      userId: req.user.id,
+      userId: req.user.id || req.user._id,
       userEmail: req.user.email,
       collegeEmail,
-      token,
-      expiresAt,
+      status: "pending_admin_review",
+      reason: verificationCheck.reason,
       createdAt: new Date(),
     });
 
-    const verifyUrl = `/api/verification/verify-college-email?token=${token}`;
-
-    console.log("==================================================");
-    console.log(`[DEV COLLEGE EMAIL SENDER] College Email Verification for user ${req.user.id}`);
-    console.log(`Submitted College Email: ${collegeEmail}`);
-    console.log(`Verification Link: ${verifyUrl}`);
-    console.log("==================================================");
+    // Update user record to pending with notes so admin review dashboard picks it up
+    const userId = req.user.id || req.user._id;
+    const filter = { $or: [{ _id: userId }, { id: userId }, { email: req.user.email }] };
+    await updateUser(filter, {
+      "platformVerification.status": "pending",
+      "platformVerification.method": "college_email",
+      "platformVerification.collegeEmail": collegeEmail,
+      "platformVerification.institutionName": verificationCheck.institutionName || null,
+      "platformVerification.notes": verificationCheck.reason || "Domain queued for manual admin verification review.",
+      "platformVerification.submittedAt": new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
 
     return res.status(200).json({
-      message: "College email verification link generated successfully.",
-      verifyUrl,
-      token,
-      notice: "In local development, inspect your server console for the verification link.",
+      success: true,
+      status: "pending",
+      message: `Your college domain '@${verificationCheck.domain}' was not automatically recognized, but has been queued for manual review by our verification team. You are not blocked from continuing!`,
+      reason: verificationCheck.reason,
     });
   } catch (err) {
     console.error("[College Email Verification Error]:", err);

@@ -57,10 +57,15 @@ export function passesHardFilters(requester, candidate) {
   const candGender = candidate.gender || candidateUser.gender;
   const candPref = candidate.genderPreference;
 
-  // Requester checks candidate gender
+  // Requester checks candidate gender / listing preference
   if (reqPref && reqPref !== "any" && reqPref !== "no_preference") {
-    if (reqPref === "male_only" && candGender !== "male") return false;
-    if (reqPref === "female_only" && candGender !== "female") return false;
+    if (candGender) {
+      if (reqPref === "male_only" && candGender !== "male") return false;
+      if (reqPref === "female_only" && candGender !== "female") return false;
+    } else if (candPref && candPref !== "any") {
+      if (reqPref === "male_only" && candPref === "female_only") return false;
+      if (reqPref === "female_only" && candPref === "male_only") return false;
+    }
   }
 
   // Candidate checks requester gender (if candidate has a preference)
@@ -157,11 +162,18 @@ export function scoreFoodPreference(reqVal, candVal) {
 // Guests Frequency (10 pts max)
 export function scoreGuestsFrequency(reqVal, candVal) {
   if (!reqVal || !candVal) return null;
-  if (reqVal === candVal || reqVal === "anytime" || candVal === "anytime")
-    return 1.0;
+  const normalizeGuest = (val) => {
+    if (val === "daytime_only") return "rarely";
+    if (val === "overnight_allowed") return "weekends_only";
+    if (val === "no_guests") return "never";
+    return val;
+  };
+  const v1 = normalizeGuest(reqVal);
+  const v2 = normalizeGuest(candVal);
+  if (v1 === v2 || v1 === "anytime" || v2 === "anytime") return 1.0;
   const order = ["never", "rarely", "weekends_only", "frequently", "anytime"];
-  const i1 = order.indexOf(reqVal);
-  const i2 = order.indexOf(candVal);
+  const i1 = order.indexOf(v1);
+  const i2 = order.indexOf(v2);
   if (i1 === -1 || i2 === -1) return 0.5;
   const diff = Math.abs(i1 - i2);
   if (diff === 1) return 0.5;
@@ -171,12 +183,14 @@ export function scoreGuestsFrequency(reqVal, candVal) {
 // City Proximity (5 pts max)
 export function scoreCityProximity(reqCity, reqLoc, candCity, candLoc) {
   if (!reqCity || !candCity) return null;
-  if (reqCity.toLowerCase().trim() !== candCity.toLowerCase().trim())
+  const c1 = String(reqCity).toLowerCase().replace(/[\s-_]+/g, "").trim();
+  const c2 = String(candCity).toLowerCase().replace(/[\s-_]+/g, "").trim();
+  if (c1 !== c2)
     return 0.0;
   if (
     reqLoc &&
     candLoc &&
-    reqLoc.toLowerCase().trim() === candLoc.toLowerCase().trim()
+    String(reqLoc).toLowerCase().trim() === String(candLoc).toLowerCase().trim()
   )
     return 1.0;
   return 0.6; // Same city, different or unstated locality
@@ -240,6 +254,16 @@ export function mapHouseRulesToProxies(houseRules) {
   if (!houseRules) return {};
   const proxies = {};
 
+  // Cleanliness Proxy (from houseRules explicit/proxy rule if specified)
+  if (houseRules.cleanliness !== undefined && houseRules.cleanliness !== null) {
+    proxies.cleanliness = Number(houseRules.cleanliness);
+  } else if (
+    houseRules.cleanlinessProxy !== undefined &&
+    houseRules.cleanlinessProxy !== null
+  ) {
+    proxies.cleanliness = Number(houseRules.cleanlinessProxy);
+  }
+
   // Smoking / Drinking Proxy
   if (
     houseRules.smokingAllowed === false &&
@@ -263,11 +287,30 @@ export function mapHouseRulesToProxies(houseRules) {
     proxies.guestsFrequency = "anytime";
   }
 
-  // Sleep Schedule Proxy (from Curfew rule)
-  if (houseRules.curfew === "10_pm" || houseRules.curfew === "11_pm") {
+  // Sleep Schedule Proxy (from Curfew rule: handles 10_pm, 11_pm, 10:30 PM, etc.)
+  const curfewNorm = String(houseRules.curfew || "")
+    .toLowerCase()
+    .replace(/[\s:_]+/g, "");
+  if (curfewNorm.includes("10") || curfewNorm.includes("11")) {
     proxies.sleepSchedule = "early_bird";
+  } else if (
+    curfewNorm.includes("12") ||
+    curfewNorm.includes("nocurfew") ||
+    curfewNorm === "flexible"
+  ) {
+    proxies.sleepSchedule = "flexible";
   } else if (houseRules.curfew === "no_curfew") {
     proxies.sleepSchedule = "flexible";
+  }
+
+  // Food Preference Proxy (if specified in houseRules)
+  if (houseRules.foodPreference) {
+    proxies.foodPreference = houseRules.foodPreference;
+  } else if (
+    houseRules.foodPolicy === "vegetarian_only" ||
+    houseRules.vegetarianOnly
+  ) {
+    proxies.foodPreference = "vegetarian";
   }
 
   return proxies;
@@ -282,18 +325,17 @@ export function scoreCandidate(
   candidate,
   weights = DEFAULT_WEIGHTS,
 ) {
+  // If candidate has houseRules, merge proxies for any missing lifestyle fields
   let candFactorValues = { ...candidate };
-
-  // If candidate is a Landlord Listing without lifestyle fields, extract proxies
-  if (candidate.houseRules && !candidate.cleanliness) {
+  if (candidate.houseRules) {
     const proxies = mapHouseRulesToProxies(candidate.houseRules);
-    candFactorValues = { ...candidate, ...proxies };
+    candFactorValues = { ...proxies, ...candidate };
   }
 
   let reqFactorValues = { ...requester };
-  if (requester.houseRules && !requester.cleanliness) {
+  if (requester.houseRules) {
     const proxies = mapHouseRulesToProxies(requester.houseRules);
-    reqFactorValues = { ...requester, ...proxies };
+    reqFactorValues = { ...proxies, ...requester };
   }
 
   const factorEvaluations = [];
